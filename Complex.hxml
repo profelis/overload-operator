@@ -1,0 +1,7 @@
+-cp src
+-lib nme
+-swf application.nmml
+--remap flash:nme
+-swf-header 0:0:0:FFFFFF
+-swf-version 10
+-main Main
