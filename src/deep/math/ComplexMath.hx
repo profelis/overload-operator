@@ -60,4 +60,14 @@ class ComplexMath
 		return a;
 	}
 	
+	@op("==") public static function eq(a:Complex, b:Complex):Bool
+	{
+		return a.re == b.re && a.im == b.im;
+	}
+	
+	@op("!=") public static function notEq(a:Complex, b:Complex):Bool
+	{
+		return a.re != b.re || a.im != b.im;
+	}
+	
 }
