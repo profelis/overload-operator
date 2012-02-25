@@ -28,7 +28,7 @@ class OverloadOperator
 		if (defaultOp == null) init();
 		var type = getType(m);
 		var ct:ClassType;
-		var op = new Map<Dynamic, String>();
+		var op = new Map<String, String>();
 		switch (type)
 		{
 			case Type.TInst(t, params):
@@ -52,10 +52,10 @@ class OverloadOperator
 								}
 							default:
 						}
-						if (o != null && defaultOp.exists(o))
+						if (o != null)
 						{
-							trace(o + "  " + method.name + " " + defaultOp.get(o));
-							op.set(defaultOp.get(o), method.name);
+							trace(o + "  " + method.name);
+							op.set(o, method.name);
 						}
 						break;
 					}
@@ -98,12 +98,20 @@ class OverloadOperator
 				{
 					case OpAssign:
 						return { expr:EBinop(OpAssign, parseExpr(o1), parseExpr(o2)), pos:pos };
+						
+					case OpAssignOp(op2):
+						var method = defaultOp.get(op2);
+						if (method != null && math.op.exist(method + "="))
+						{
+							return { expr:ECall( {expr:EField(math.typeExp, math.op.get(method + "=")), pos:pos}, [parseExpr(o1), parseExpr(o2)]), pos:pos };
+						}
+						
 					default:
 				}
-				var method = math.op.get(op);
-				if (method != null)
+				var method = defaultOp.get(op);
+				if (method != null && math.op.exist(method))
 				{
-					return { expr:ECall( {expr:EField(math.typeExp, method), pos:pos}, [parseExpr(o1), parseExpr(o2)]), pos:pos };
+					return { expr:ECall( {expr:EField(math.typeExp, math.op.get(method)), pos:pos}, [parseExpr(o1), parseExpr(o2)]), pos:pos };
 				}
 			case EParenthesis(e2):
 				return { expr:EParenthesis(parseExpr(e2)), pos:pos };
@@ -119,15 +127,15 @@ class OverloadOperator
 	
 	static var math:MathType;
 	
-	static var defaultOp:Hash<Dynamic>;
+	static var defaultOp:Map<Dynamic, String>;
 	
 	static function init()
 	{
-		defaultOp = new Hash<Dynamic>();
-		defaultOp.set("+", OpAdd);
-		defaultOp.set("-", OpSub);
-		defaultOp.set("*", OpMult);
-		defaultOp.set("/", OpDiv);
+		defaultOp = new Map<Dynamic, String>();
+		defaultOp.set(OpAdd, "+");
+		defaultOp.set(OpSub, "-");
+		defaultOp.set(OpMult, "*");
+		defaultOp.set(OpDiv, "/");
 	}
 	
 	static function getType(math:ExprRequire<Class<Dynamic>>):haxe.macro.Type
@@ -152,7 +160,7 @@ class OverloadOperator
 typedef MathType = 
 {
 	typeExp:Expr,
-	op:Map<Dynamic, String>
+	op:Map<String, String>
 }
 
 class Map<K, V>
