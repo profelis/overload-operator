@@ -19,6 +19,7 @@ class OverloadOperator
 		{
 			Context.error("set math first", Context.currentPos());
 		}
+		trace(e);
 		return parseExpr(e);
 	}
 	
@@ -106,6 +107,11 @@ class OverloadOperator
 				}
 			case EParenthesis(e2):
 				return { expr:EParenthesis(parseExpr(e2)), pos:pos };
+			case EBlock(ls):
+				var rls = new Array();
+				for (i in ls)
+					rls.push(parseExpr(i));
+				return { expr:EBlock(rls), pos:pos };
 			default:
 		}
 		return e;
