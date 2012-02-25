@@ -19,7 +19,7 @@ class OverloadOperator
 		{
 			Context.error("set math first", Context.currentPos());
 		}
-		trace(e);
+		//trace(e);
 		return parseExpr(e);
 	}
 	
@@ -28,7 +28,7 @@ class OverloadOperator
 		if (defaultOp == null) init();
 		var type = getType(m);
 		var ct:ClassType;
-		var op = new Map<String, String>();
+		var op = new Hash<String>();
 		switch (type)
 		{
 			case Type.TInst(t, params):
@@ -101,7 +101,7 @@ class OverloadOperator
 						
 					case OpAssignOp(op2):
 						var method = defaultOp.get(op2);
-						if (method != null && math.op.exist(method + "="))
+						if (method != null && math.op.exists(method + "="))
 						{
 							return { expr:ECall( {expr:EField(math.typeExp, math.op.get(method + "=")), pos:pos}, [parseExpr(o1), parseExpr(o2)]), pos:pos };
 						}
@@ -109,7 +109,7 @@ class OverloadOperator
 					default:
 				}
 				var method = defaultOp.get(op);
-				if (method != null && math.op.exist(method))
+				if (method != null && math.op.exists(method))
 				{
 					return { expr:ECall( {expr:EField(math.typeExp, math.op.get(method)), pos:pos}, [parseExpr(o1), parseExpr(o2)]), pos:pos };
 				}
@@ -160,7 +160,7 @@ class OverloadOperator
 typedef MathType = 
 {
 	typeExp:Expr,
-	op:Map<String, String>
+	op:Hash<String>
 }
 
 class Map<K, V>
@@ -192,9 +192,10 @@ class Map<K, V>
 		return (pos < 0) ? null : values[pos];
 	}
 	
-	public function exist(k:K):Bool
+	public function exists(k:K):Bool
 	{
 		return Lambda.indexOf(keys, k) > -1;
 	}
+	
 }
 #end

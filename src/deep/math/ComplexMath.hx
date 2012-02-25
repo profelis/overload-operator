@@ -43,4 +43,21 @@ class ComplexMath
 		return a;
 	}
 	
+	@op("*=") inline static public function imult(a:Complex, b:Complex):Complex
+	{
+		var re = a.re;
+		a.re = re * b.re - a.im * b.im;
+		a.im = re * b.im + a.im * b.re;
+		return a;
+	}
+	
+	@op("/=") inline static public function idiv(a:Complex, b:Complex):Complex
+	{
+		var re = a.re;
+		var div = 1 / (b.re * b.re + b.im * b.im);
+		a.re = (re * b.re + a.im * b.im) * div;
+		a.im = (re * b.im + a.im * b.re) * div;
+		return a;
+	}
+	
 }

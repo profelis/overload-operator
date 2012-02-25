@@ -28,7 +28,7 @@ class Main
 		
 		OverloadOperator.setMath(ComplexMath);
 		var c4;
-		OverloadOperator.calc( { c4 = c1 + c2; c4 += c3; trace(c4); } );
+		OverloadOperator.calc( { c4 = c1 + c2; c4 *= c3; trace(c4); } );
 		
 		
 		c4 = OverloadOperator.calc(c1 + c2 * c3);
