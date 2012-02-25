@@ -27,12 +27,17 @@ class Main
 		
 		OverloadOperator.setMath(ComplexMath);
 		
-		
 		var c4;
-		var eq;
 		//OverloadOperator.calc(c1 == c2);
-		OverloadOperator.calc( { c4 = c1 + c2; c4 *= c3; trace(c4); eq = c4 == new Complex( -9, 1); } );
-		trace(eq);
+		OverloadOperator.calc( { 
+			c4 = c1 + c2; 
+			c4 *= c3;
+			trace(c4);
+			var c5 = c4 * c4;
+			trace(c5);
+			var eq = c4 == new Complex( -9, 1); 
+			trace(eq);
+		} );
 		
 		
 		
