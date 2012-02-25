@@ -30,8 +30,8 @@ class Main
 		var c4;
 		OverloadOperator.calc( { c4 = c1 + c2; c4 += c3; trace(c4); } );
 		
-		/*
-		var c4 = OverloadOperator.calc(c1 + c2 * c3);
+		
+		c4 = OverloadOperator.calc(c1 + c2 * c3);
 		trace(c4);
 		
 		c4 = OverloadOperator.calc((c1 + c2) * c3);
@@ -53,7 +53,7 @@ class Main
 		var c4:Complex;
 		OverloadOperator.calc(c4 = c1 * c2);
 		trace(c4);
-		*/
+		
 	}
 	
 }
