@@ -153,6 +153,8 @@ class OverloadOperator
 				var key = o + ":" + h;
 				if (math.exists(key)) return { expr:ECall( math.get(key), [e1]), pos:pos };
 				
+				return { expr:EUnop(op, postFix, e1), pos:pos };
+				
 			case EBinop(op, e1, e2):
 				switch (op)
 				{
@@ -180,7 +182,7 @@ class OverloadOperator
 							key = "C:" + key;
 							if (math.exists(key)) return { expr:ECall( math.get(key), [e2, e1]), pos:pos };
 						}
-						return e;
+						return { expr:EBinop(OpAssignOp(op2), e1, e2), pos:pos };
 						
 					default:
 				}
@@ -206,6 +208,8 @@ class OverloadOperator
 					key = "C:" + key;
 					if (math.exists(key)) return { expr:ECall( math.get(key), [e2, e1]), pos:pos };
 				}
+				
+				return { expr:EBinop(op, e1, e2), pos:pos };
 				
 			case EParenthesis(e):
 				return { expr:EParenthesis(parseExpr(e)), pos:pos };
@@ -355,6 +359,5 @@ class Map<K, V>
 	{
 		return Lambda.indexOf(keys, k) > -1;
 	}
-	
 }
 #end
