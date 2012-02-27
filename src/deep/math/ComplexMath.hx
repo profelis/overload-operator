@@ -91,7 +91,7 @@ class ComplexMath
 		return a;
 	}
 	
-	@op("/=") inline static public function idiv(a:Complex, b:Complex):Complex
+	@op("/=", true) inline static public function idiv(a:Complex, b:Complex):Complex
 	{
 		var are = a.re;
 		var bre = b.re;

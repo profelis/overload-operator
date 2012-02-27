@@ -59,6 +59,7 @@ class OverloadTestComplex extends TestCase
 			c /= c2;
 			
 			var c3 = c + c2;
+			
 			assertTrue(ComplexMath.eq(c3, ComplexMath.add(c, c2)));
 		});
 		

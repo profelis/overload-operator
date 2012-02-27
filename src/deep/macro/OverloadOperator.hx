@@ -97,9 +97,8 @@ class OverloadOperator
 								default:
 							}
 						}
-						var t = method.type;
 						var ts = new Array<Type>();
-						switch (t)
+						switch (method.type)
 						{
 							case TFun(args, ret):
 								for (a in args) ts.push(a.t);
@@ -142,6 +141,9 @@ class OverloadOperator
 		var pos = e.pos;
 		switch (e.expr)
 		{
+			case EConst(c):
+				return { expr:EConst(c), pos:pos };
+				
 			case EUnop(op, postFix, e1):
 				var o = defaultOp.get(op);
 				if (postFix) o = o.substr( -1) + o.substr(0, o.length - 1);
@@ -192,10 +194,8 @@ class OverloadOperator
 				var t1 = typeOf(e1);
 				var t2 = typeOf(e2);
 				
-				if (t1 == null)
-					Context.error("can't recognize type", e1.pos);
-				if (t2 == null)
-					Context.error("can't recognize type", e2.pos);
+				if (t1 == null) Context.error("can't recognize type", e1.pos);
+				if (t2 == null) Context.error("can't recognize type", e2.pos);
 					
 				var h = typeName(t1) + "->" + typeName(t2);
 				var key = o + ":" + h;
@@ -220,6 +220,9 @@ class OverloadOperator
 					nexprs.push(parseExpr(i));
 				return { expr:EBlock(nexprs), pos:pos };
 				
+			case EArray(e1, e2):
+				return { expr:EArray(parseExpr(e1), parseExpr(e2)), pos:pos };
+				
 			case EArrayDecl(values):
 				var nvalues = new Array<Expr>();
 				for (i in values)
@@ -230,7 +233,6 @@ class OverloadOperator
 				for (i in vars)
 					i.expr = parseExpr(i.expr);
 				return { expr:EVars(vars), pos:pos };
-			default:
 				
 			case EUntyped(e):
 				return { expr:EUntyped(parseExpr(e)), pos:pos };
@@ -246,6 +248,58 @@ class OverloadOperator
 				for (i in params)
 					nparams.push(parseExpr(i));
 				return { expr:ENew(t, nparams), pos:pos };
+				
+			case EField(e, field):
+				return { expr:EField(parseExpr(e), field), pos:pos };
+				
+			case EType(e, field):
+				return { expr:EType(parseExpr(e), field), pos:pos };
+				
+			case EObjectDecl(fields):
+				for (i in fields) i.expr = parseExpr(i.expr);
+				return { expr:EObjectDecl(fields), pos:pos };
+				
+			case EIf(econd, eif, eelse):
+				return { expr:EIf(parseExpr(econd), parseExpr(eif), parseExpr(eelse)), pos:pos };
+				
+			case ETernary(econd, eif, eelse):
+				return { expr:ETernary(parseExpr(econd), parseExpr(eif), parseExpr(eelse)), pos:pos };
+				
+			case EFor(it, expr):
+				return { expr:EFor(parseExpr(it), parseExpr(expr)), pos:pos };
+				
+			case EWhile(econd, e, normalWhile):
+				return { expr:EWhile(parseExpr(econd), parseExpr(e), normalWhile), pos:pos };
+				
+			case EIn(e1, e2):
+				return { expr:EIn(parseExpr(e1), parseExpr(e2)), pos:pos };
+				
+			case ESwitch(e, cases, edef):
+				if (edef != null) edef = parseExpr(edef);
+				for (c in cases)
+				{
+					c.expr = parseExpr(c.expr);
+					var nvalues = new Array<Expr>();
+					for (i in c.values) nvalues.push(parseExpr(i));
+					c.values = nvalues;
+				}
+				return { expr:ESwitch(parseExpr(e), cases, edef), pos:pos };
+				
+			case ETry(e, catches):
+				for (c in catches) c.expr = parseExpr(c.expr);
+				return { expr:ETry(parseExpr(e), catches), pos:pos };
+				
+			case EReturn(e):
+				if (e != null) e = parseExpr(e);
+				return { expr:EReturn(e), pos:pos };
+				
+			case EThrow(e):
+				return { expr:EThrow(parseExpr(e)), pos:pos };
+				
+			case ECast(e, t):
+				return { expr:ECast(parseExpr(e), t), pos:pos };
+				
+			default: return e;
 		}
 		return e;
 	}
