@@ -143,18 +143,15 @@ class OverloadOperator
 		switch (e.expr)
 		{
 			case EUnop(op, postFix, e1):
-				var o:String = defaultOp.get(op);
-				if (o != null)
-				{
-					if (postFix) o = o.substr( -1) + o.substr(0, o.length - 1);
-					e1 = parseExpr(e1);
-					var t1 = typeOf(e1);
-					if (t1 == null) Context.error("can't recognize type", e1.pos);
-					
-					var h = typeName(t1);
-					var key = o + ":" + h;
-					if (math.exists(key)) return { expr:ECall( math.get(key), [e1]), pos:pos };
-				}
+				var o = defaultOp.get(op);
+				if (postFix) o = o.substr( -1) + o.substr(0, o.length - 1);
+				e1 = parseExpr(e1);
+				var t1 = typeOf(e1);
+				if (t1 == null) Context.error("can't recognize type", e1.pos);
+				
+				var h = typeName(t1);
+				var key = o + ":" + h;
+				if (math.exists(key)) return { expr:ECall( math.get(key), [e1]), pos:pos };
 				
 			case EBinop(op, e1, e2):
 				switch (op)
@@ -281,6 +278,9 @@ class OverloadOperator
 		
 		defaultOp.set(OpIncrement, "++x"); // "x++" postfix
 		defaultOp.set(OpDecrement, "--x"); // "x--" postfix
+		defaultOp.set(OpNot, "!");
+		defaultOp.set(OpNeg, "-x");
+		defaultOp.set(OpNegBits, "~");
 	}
 	
 	static function typeName(t:Type):String
