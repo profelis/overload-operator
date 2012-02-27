@@ -16,28 +16,60 @@ class OverloadOperator
 	@:macro public static function calc(e:Expr):Expr
 	{
 		if (math == null)
-			Context.error("set math first", Context.currentPos());
+			Context.error("add math first", Context.currentPos());
 		
 		return parseExpr(e);
 	}
 	
-	@:macro public static function setMath(m:ExprRequire<Class<Dynamic>>)
+	@:macro public static function clearMath():Expr
+	{
+		math = null;
+		return {expr:EConst(CIdent("null")), pos:Context.currentPos()};
+	}
+	
+	@:macro public static function addMath(m:ExprRequire<Class<Dynamic>>)
 	{
 		if (defaultOp == null) init();
-		var type = getType(m);
-		var ct:ClassType;
-		var op = new Hash<String>();
+		var type:Type;
+		var pos = m.pos;
+		switch (m.expr)
+		{
+			case EConst(c):
+				switch (c)
+				{
+					case CType(s):
+						type = Context.getType(s);
+					default:
+				}
+			case EType(e, field):
+				type = Context.getType(field);
+				
+			default:
+		}
+		if (type == null)
+			Context.error("Math is unknown", pos);
+		
+		var typeExp:Expr;
+		if (math == null) math = new Hash<Expr>();
 		switch (type)
 		{
 			case Type.TInst(t, params):
-				ct = t.get();
+				var ct = t.get();
+				
+				for (p in ct.pack)
+				{
+					if (typeExp == null)
+						typeExp = { expr:EConst(CIdent(p)), pos:pos };
+					else
+						typeExp = { expr:EField(typeExp, p), pos:pos };
+				}
+				typeExp = { expr:EType(typeExp, ct.name), pos:pos };
 				
 				for (method in ct.statics.get())
 				{
 					for (meta in method.meta.get())
 					{
 						if (meta.name != "op") continue;
-
 						var param = meta.params[0];
 						var o:String = null;
 						switch (param.expr)
@@ -50,46 +82,78 @@ class OverloadOperator
 								}
 							default:
 						}
-						if (o != null) op.set(o, method.name);
-						break;
+						var com = false;
+						param = meta.params[1];
+						if (param != null)
+						{
+							switch (param.expr)
+							{
+								case EConst(c):
+									switch (c)
+									{
+										case CIdent(i): com = i == "true";
+										default:
+									}
+								default:
+							}
+						}
+						var t = method.type;
+						var ts = new Array<Type>();
+						switch (t)
+						{
+							case TFun(args, ret):
+								for (a in args) ts.push(a.t);
+							default:
+						}
+						var h = "";
+						for (t in ts) h += typeName(t) + "->";
+						h = h.substr(0, h.length - 2);
+						
+						var key = o + ":" + h;
+						var value = { expr:EField(typeExp, method.name), pos:pos };
+						//trace(key + "    " + value);
+						if (math.exists(key)) trace("Overriding existing method " + key);
+						math.set(key, value);
+						
+						if (com && ts.length == 2)
+						{
+							ts.push(ts.shift());
+							h = "";
+							for (t in ts) h += typeName(t) + "->";
+							h = h.substr(0, h.length-2);
+							key = "C:" + o + ":" + h;
+							//trace(key + "    " + value);
+							if (math.exists(key)) trace("Overriding existing method " + key);
+							math.set(key, value);
+						}
 					}
 				}
 			default:
 		}
-		if (ct == null)
-		{
-			Context.error("Can't parse math", Context.currentPos());
-		}
-		var typeExp:Expr;
-		var pos = Context.currentPos();
-		for (p in ct.pack)
-		{
-			if (typeExp == null)
-				typeExp = { expr:EConst(CIdent(p)), pos:pos };
-			else
-				typeExp = { expr:EField(typeExp, p), pos:pos };
-		}
-		typeExp = { expr:EType(typeExp, ct.name), pos:pos };
+		if (typeExp == null) Context.error("Can't parse math", pos);
 		
-		math = { typeExp:typeExp, op:op };
-		
-		return {expr:EConst(CIdent("null")), pos:Context.currentPos()}; // null; :)
+		return {expr:EConst(CIdent("null")), pos:pos};
 	}
 	
 	#if macro
 	
 	static function parseExpr(e:Expr):Expr
 	{
-		var pos = Context.currentPos();
+		var pos = e.pos;
 		switch (e.expr)
 		{
 			case EUnop(op, postFix, e1):
-				var method:String = defaultOp.get(op);
-				if (method != null)
+				var o:String = defaultOp.get(op);
+				if (o != null)
 				{
-					if (postFix) method = method.substr( -1) + method.substr(0, method.length - 1);
-					if (math.op.exists(method))
-						return { expr:ECall( {expr:EField(math.typeExp, math.op.get(method)), pos:pos}, [parseExpr(e1)]), pos:pos };
+					if (postFix) o = o.substr( -1) + o.substr(0, o.length - 1);
+					e1 = parseExpr(e1);
+					var t1 = typeOf(e1);
+					if (t1 == null) Context.error("can't recognize type", e1.pos);
+					
+					var h = typeName(t1);
+					var key = o + ":" + h;
+					if (math.exists(key)) return { expr:ECall( math.get(key), [e1]), pos:pos };
 				}
 				
 			case EBinop(op, e1, e2):
@@ -99,17 +163,52 @@ class OverloadOperator
 						return { expr:EBinop(OpAssign, parseExpr(e1), parseExpr(e2)), pos:pos };
 						
 					case OpAssignOp(op2):
-						var method = defaultOp.get(op2) + "=";
-						if (method != null && math.op.exists(method))
+						var o = defaultOp.get(op2) + "=";
+						e1 = parseExpr(e1);
+						e2 = parseExpr(e2);
+						var t1 = typeOf(e1);
+						var t2 = typeOf(e2);
+						
+						if (t1 == null) Context.error("can't recognize type", e1.pos);
+						if (t2 == null) Context.error("can't recognize type", e2.pos);
+							
+						var h = typeName(t1) + "->" + typeName(t2);
+						var key = o + ":" + h;
+						if (math.exists(key))
 						{
-							return { expr:ECall( {expr:EField(math.typeExp, math.op.get(method)), pos:pos}, [parseExpr(e1), parseExpr(e2)]), pos:pos };
+							return { expr:ECall( math.get(key), [e1, e2]), pos:pos };
 						}
+						else
+						{
+							key = "C:" + key;
+							if (math.exists(key)) return { expr:ECall( math.get(key), [e2, e1]), pos:pos };
+						}
+						return e;
 						
 					default:
 				}
-				var method = defaultOp.get(op);
-				if (method != null && math.op.exists(method))
-					return { expr:ECall( {expr:EField(math.typeExp, math.op.get(method)), pos:pos}, [parseExpr(e1), parseExpr(e2)]), pos:pos };
+				var o = defaultOp.get(op);
+				e1 = parseExpr(e1);
+				e2 = parseExpr(e2);
+				var t1 = typeOf(e1);
+				var t2 = typeOf(e2);
+				
+				if (t1 == null)
+					Context.error("can't recognize type", e1.pos);
+				if (t2 == null)
+					Context.error("can't recognize type", e2.pos);
+					
+				var h = typeName(t1) + "->" + typeName(t2);
+				var key = o + ":" + h;
+				if (math.exists(key))
+				{
+					return { expr:ECall( math.get(key), [e1, e2]), pos:pos };
+				}
+				else
+				{
+					key = "C:" + key;
+					if (math.exists(key)) return { expr:ECall( math.get(key), [e2, e1]), pos:pos };
+				}
 				
 			case EParenthesis(e):
 				return { expr:EParenthesis(parseExpr(e)), pos:pos };
@@ -150,12 +249,13 @@ class OverloadOperator
 		return e;
 	}
 	
-	static var math:MathType;
+	static var math:Hash<Expr>;
 	
 	static var defaultOp:Map<Dynamic, String>;
 	
 	static function init()
 	{
+		if (defaultOp != null) return;
 		defaultOp = new Map<Dynamic, String>();
 		// http://haxe.org/api/haxe/macro/binop
 		defaultOp.set(OpAdd, "+");
@@ -168,10 +268,10 @@ class OverloadOperator
 		defaultOp.set(OpGte, ">=");
 		defaultOp.set(OpLt, "<");
 		defaultOp.set(OpLte, "<=");
-		defaultOp.set(OpAnd, "&&");
-		defaultOp.set(OpBoolAnd, "&");
-		defaultOp.set(OpOr, "||");
-		defaultOp.set(OpBoolOr, "|");
+		defaultOp.set(OpAnd, "&");
+		defaultOp.set(OpBoolAnd, "&&");
+		defaultOp.set(OpOr, "|");
+		defaultOp.set(OpBoolOr, "||");
 		defaultOp.set(OpXor, "^");
 		defaultOp.set(OpShl, ">>");
 		defaultOp.set(OpShr, "<<");
@@ -183,30 +283,44 @@ class OverloadOperator
 		defaultOp.set(OpDecrement, "--x"); // "x--" postfix
 	}
 	
-	static function getType(math:Expr):haxe.macro.Type
+	static function typeName(t:Type):String
 	{
-		switch (math.expr)
+		t = Context.follow(t, false);
+		var type:BaseType;
+		switch (t)
 		{
-			case EConst(c):
-				switch (c)
-				{
-					case CType(s): return Context.getType(s);
-					default:
-				}
+			case TInst(t, params):
+				type = t.get();
+			
+			case TEnum(t, params):
+				type = t.get();
+				
 			default:
 		}
-		return null;
+		if (type == null)
+		{
+			trace(t);
+			Context.error("unknown type name '" + t + "'", Context.currentPos());
+		}
+		return type.pack.join(".") + (type.pack.length > 0 ? "." : "") + type.name;
 	}
+	
+	static function typeOf(e:Expr):Type
+	{
+		try 
+		{
+			return Context.typeof(e);
+		}
+		catch (e:Dynamic)
+		{
+			return null;
+		}
+	}
+
 	#end
 }
 
 #if macro
-
-typedef MathType = 
-{
-	typeExp:Expr,
-	op:Hash<String>
-}
 
 class Map<K, V>
 {
