@@ -16,7 +16,7 @@ class OverloadOperator
 	@:macro public static function calc(e:Expr):Expr
 	{
 		if (math == null)
-			Context.error("add math first", Context.currentPos());
+			Context.error("add math first", e.pos);
 		
 		return parseExpr(e);
 	}
@@ -46,8 +46,7 @@ class OverloadOperator
 				
 			default:
 		}
-		if (type == null)
-			Context.error("Math is unknown", pos);
+		if (type == null) Context.error("Math is unknown", pos);
 		
 		var typeExp:Expr;
 		if (math == null) math = new Hash<Expr>();
@@ -58,10 +57,8 @@ class OverloadOperator
 				
 				for (p in ct.pack)
 				{
-					if (typeExp == null)
-						typeExp = { expr:EConst(CIdent(p)), pos:pos };
-					else
-						typeExp = { expr:EField(typeExp, p), pos:pos };
+					if (typeExp == null) typeExp = { expr:EConst(CIdent(p)), pos:pos };
+					else typeExp = { expr:EField(typeExp, p), pos:pos };
 				}
 				typeExp = { expr:EType(typeExp, ct.name), pos:pos };
 				
@@ -142,20 +139,19 @@ class OverloadOperator
 		switch (e.expr)
 		{
 			case EConst(c):
-				return { expr:EConst(c), pos:pos };
+				return e;
 				
 			case EUnop(op, postFix, e1):
 				var o = defaultOp.get(op);
-				if (postFix) o = o.substr( -1) + o.substr(0, o.length - 1);
+				if (postFix) o = o.substr(-1) + o.substr(0, o.length - 1);
 				e1 = parseExpr(e1);
 				var t1 = typeOf(e1);
 				if (t1 == null) Context.error("can't recognize type", e1.pos);
 				
-				var h = typeName(t1);
-				var key = o + ":" + h;
+				var key = o + ":" + typeName(t1);
 				if (math.exists(key)) return { expr:ECall( math.get(key), [e1]), pos:pos };
 				
-				return { expr:EUnop(op, postFix, e1), pos:pos };
+				return e;
 				
 			case EBinop(op, e1, e2):
 				switch (op)
@@ -166,15 +162,14 @@ class OverloadOperator
 					case OpAssignOp(op2):
 						var o = defaultOp.get(op2) + "=";
 						e1 = parseExpr(e1);
-						e2 = parseExpr(e2);
 						var t1 = typeOf(e1);
-						var t2 = typeOf(e2);
-						
 						if (t1 == null) Context.error("can't recognize type", e1.pos);
+						
+						e2 = parseExpr(e2);
+						var t2 = typeOf(e2);
 						if (t2 == null) Context.error("can't recognize type", e2.pos);
 							
-						var h = typeName(t1) + "->" + typeName(t2);
-						var key = o + ":" + h;
+						var key = o + ":" + typeName(t1) + "->" + typeName(t2);
 						if (math.exists(key))
 						{
 							return { expr:ECall( math.get(key), [e1, e2]), pos:pos };
@@ -184,21 +179,20 @@ class OverloadOperator
 							key = "C:" + key;
 							if (math.exists(key)) return { expr:ECall( math.get(key), [e2, e1]), pos:pos };
 						}
-						return { expr:EBinop(OpAssignOp(op2), e1, e2), pos:pos };
+						return e;
 						
 					default:
 				}
 				var o = defaultOp.get(op);
 				e1 = parseExpr(e1);
-				e2 = parseExpr(e2);
 				var t1 = typeOf(e1);
-				var t2 = typeOf(e2);
-				
 				if (t1 == null) Context.error("can't recognize type", e1.pos);
+				
+				e2 = parseExpr(e2);
+				var t2 = typeOf(e2);
 				if (t2 == null) Context.error("can't recognize type", e2.pos);
 					
-				var h = typeName(t1) + "->" + typeName(t2);
-				var key = o + ":" + h;
+				var key = o + ":" + typeName(t1) + "->" + typeName(t2);
 				if (math.exists(key))
 				{
 					return { expr:ECall( math.get(key), [e1, e2]), pos:pos };
@@ -209,7 +203,7 @@ class OverloadOperator
 					if (math.exists(key)) return { expr:ECall( math.get(key), [e2, e1]), pos:pos };
 				}
 				
-				return { expr:EBinop(op, e1, e2), pos:pos };
+				return e;
 				
 			case EParenthesis(e):
 				return { expr:EParenthesis(parseExpr(e)), pos:pos };
@@ -290,8 +284,7 @@ class OverloadOperator
 				return { expr:ETry(parseExpr(e), catches), pos:pos };
 				
 			case EReturn(e):
-				if (e != null) e = parseExpr(e);
-				return { expr:EReturn(e), pos:pos };
+				return { expr:EReturn(e != null : parseExpr(e) : e), pos:pos };
 				
 			case EThrow(e):
 				return { expr:EThrow(parseExpr(e)), pos:pos };
