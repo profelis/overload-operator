@@ -46,6 +46,7 @@ class OverloadOperator
 			default:
 		}
 		if (type == null) Context.error("Math is unknown", pos);
+		type = Context.follow(type);
 		
 		var typeExp:Expr;
 		if (math == null) math = new Hash<Expr>();
@@ -94,7 +95,7 @@ class OverloadOperator
 							}
 						}
 						var ts = new Array<String>();
-						switch (method.type)
+						switch (Context.follow(method.type))
 						{
 							case TFun(args, ret):
 								for (a in args) ts.push(typeName(a.t));
@@ -332,7 +333,7 @@ class OverloadOperator
 	
 	static function typeName(t:Type):String
 	{
-		t = Context.follow(t, false);
+		t = Context.follow(t);
 		var type:BaseType;
 		switch (t)
 		{
@@ -373,7 +374,8 @@ class OverloadOperator
 	{
 		try 
 		{
-			return Context.typeof(e);
+			var t = Context.typeof(e);
+			return Context.follow(t);
 		}
 		catch (e:Dynamic)
 		{
