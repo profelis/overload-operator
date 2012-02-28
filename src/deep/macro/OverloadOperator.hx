@@ -373,8 +373,7 @@ class OverloadOperator
 	{
 		try 
 		{
-			var t = Context.typeof(e);
-			return Context.follow(t);
+			return Context.typeof(e);
 		}
 		catch (e:Dynamic)
 		{

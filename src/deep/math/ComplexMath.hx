@@ -23,6 +23,13 @@ class ComplexMath
 		return new Complex(a.re - b.re, a.im - b.im);
 	}
 	
+	@op("-x") inline static public function neg(a:Complex):Complex
+	{
+		a.re = -a.re;
+		a.im = -a.im;
+		return a;
+	}
+	
 	@op("-", false) inline static public function subFloat(a:Complex, b:Float):Complex
 	{
 		return new Complex(a.re - b, a.im);
@@ -84,7 +91,7 @@ class ComplexMath
 		return a;
 	}
 	
-	@op("*=", false) inline static public function imultFloat(a:Complex, b:Float):Complex
+	@op("*=", true) inline static public function imultFloat(a:Complex, b:Float):Complex
 	{
 		a.re *= b;
 		a.im *= b;

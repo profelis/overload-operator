@@ -44,7 +44,7 @@ class OverloadTestComplex extends TestCase
 			c = new Complex(0, 1);
 			c *= c;  // i^2
 			
-			assertTrue(c.im == 0 && c.re == -1);
+			assertTrue(c == new Complex(-1, 0));
 		});
 	}
 	
@@ -89,6 +89,13 @@ class OverloadTestComplex extends TestCase
 			}
 			assertTrue(c == c2);
 			assertTrue(Math.abs(c.re - 1) < 0.00000001);
+		});
+	}
+	
+	function test5()
+	{
+		OverloadOperator.calc( {
+			assertTrue(-new Complex(3, -4) == new Complex(-3, 4));
 		});
 	}
 	
