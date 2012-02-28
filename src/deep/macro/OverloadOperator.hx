@@ -154,36 +154,18 @@ class OverloadOperator
 				return e;
 				
 			case EBinop(op, e1, e2):
+				var assign = false;
 				switch (op)
 				{
 					case OpAssign:
 						return { expr:EBinop(OpAssign, parseExpr(e1), parseExpr(e2)), pos:pos };
 						
 					case OpAssignOp(op2):
-						var o = defaultOp.get(op2) + "=";
-						e1 = parseExpr(e1);
-						var t1 = typeOf(e1);
-						if (t1 == null) Context.error("can't recognize type", e1.pos);
-						
-						e2 = parseExpr(e2);
-						var t2 = typeOf(e2);
-						if (t2 == null) Context.error("can't recognize type", e2.pos);
-							
-						var key = o + ":" + typeName(t1) + "->" + typeName(t2);
-						if (math.exists(key))
-						{
-							return { expr:ECall( math.get(key), [e1, e2]), pos:pos };
-						}
-						else
-						{
-							key = "C:" + key;
-							if (math.exists(key)) return { expr:ECall( math.get(key), [e2, e1]), pos:pos };
-						}
-						return e;
-						
+						assign = true;
+						op = op2;
 					default:
 				}
-				var o = defaultOp.get(op);
+				var o = defaultOp.get(op) + (assign ? "=" : "");
 				e1 = parseExpr(e1);
 				var t1 = typeOf(e1);
 				if (t1 == null) Context.error("can't recognize type", e1.pos);
