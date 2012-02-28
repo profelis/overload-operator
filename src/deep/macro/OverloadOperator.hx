@@ -29,7 +29,6 @@ class OverloadOperator
 	
 	@:macro public static function addMath(m:ExprRequire<Class<Dynamic>>)
 	{
-		if (defaultOp == null) init();
 		var type:Type;
 		var pos = m.pos;
 		switch (m.expr)
@@ -52,7 +51,7 @@ class OverloadOperator
 		if (math == null) math = new Hash<Expr>();
 		switch (type)
 		{
-			case Type.TInst(t, params):
+			case TInst(t, params):
 				var ct = t.get();
 				
 				for (p in ct.pack)
@@ -94,30 +93,32 @@ class OverloadOperator
 								default:
 							}
 						}
-						var ts = new Array<Type>();
+						var ts = new Array<String>();
 						switch (method.type)
 						{
 							case TFun(args, ret):
-								for (a in args) ts.push(a.t);
+								for (a in args) ts.push(typeName(a.t));
 							default:
 						}
 						var key = o + ":";
-						for (t in ts) key += typeName(t) + "->";
+						for (t in ts) key += t + "->";
 						if (ts.length > 0) key = key.substr(0, key.length - 2);
 						
 						var value = { expr:EField(typeExp, method.name), pos:pos };
 						//trace(key + "    " + value);
-						if (math.exists(key)) trace("Overriding existing method " + key);
+						if (math.exists(key)) 
+							Context.warning("Overriding existing method " + key, pos);
 						math.set(key, value);
 						
 						if (com && ts.length == 2 && ts[0] != ts[1])
 						{
-							ts.push(ts.shift());
 							key = "C:" + o + ":";
-							for (t in ts) key += typeName(t) + "->";
+							ts.push(ts.shift());
+							for (t in ts) key += t + "->";
 							if (ts.length > 0) key = key.substr(0, key.length - 2);
 							//trace(key + "    " + value);
-							if (math.exists(key)) trace("Overriding existing method " + key);
+							if (math.exists(key))
+								Context.warning("Overriding existing method " + key, pos);
 							math.set(key, value);
 						}
 					}
@@ -297,11 +298,7 @@ class OverloadOperator
 	
 	static var math:Hash<Expr>;
 	
-	static var defaultOp:Map<Dynamic, String>;
-	
-	static function init()
-	{
-		if (defaultOp != null) return;
+	static var defaultOp:Map < Dynamic, String > = {
 		defaultOp = new Map<Dynamic, String>();
 		// http://haxe.org/api/haxe/macro/binop
 		defaultOp.set(OpAdd, "+");
@@ -330,6 +327,7 @@ class OverloadOperator
 		defaultOp.set(OpNot, "!");
 		defaultOp.set(OpNeg, "-x");
 		defaultOp.set(OpNegBits, "~");
+		defaultOp;
 	}
 	
 	static function typeName(t:Type):String
@@ -338,10 +336,27 @@ class OverloadOperator
 		var type:BaseType;
 		switch (t)
 		{
+			case TMono(t2):
+				if (t2 != null) t = t2.get();
+				
+			case TFun(args, ret):
+				t = ret;
+				
+			case TDynamic(t2):
+				t = t2;
+				
+			default:
+		}
+		
+		switch (t)
+		{		
 			case TInst(t, params):
 				type = t.get();
 			
 			case TEnum(t, params):
+				type = t.get();
+				
+			case TType(t, params):
 				type = t.get();
 				
 			default:
@@ -358,7 +373,8 @@ class OverloadOperator
 	{
 		try 
 		{
-			return Context.typeof(e);
+			var t = Context.typeof(e);
+			return Context.follow(t);
 		}
 		catch (e:Dynamic)
 		{
