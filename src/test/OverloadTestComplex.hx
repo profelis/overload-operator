@@ -120,4 +120,35 @@ class OverloadTestComplex extends TestCase
 		});
 	}
 	
+	var cR(default, null):Complex;
+	var cW(null, default):Complex;
+	var cProp(get_c, set_c):Complex;
+	var _cProp:Complex;
+	
+	function get_c() { return _cProp; }
+	function set_c(v) { return _cProp = v; }
+	
+	function test7()
+	{
+		cR = new Complex(0, 1);
+		var a = [new Complex(1, 2), new Complex(3, 4), null];
+		OverloadOperator.calc({
+			cR *= cR;
+			
+			assertTrue(cR == new Complex( -1, 0));
+			
+			cW = cR;
+			cW += new Complex(1, 1);
+			
+			assertTrue(cW == new Complex(0, 1));
+			
+			cProp = cR + cW;
+			cProp = cProp + 1.5;
+			assertTrue(cProp == _cProp);
+			
+			a[2] = a[0] * a[1];
+			assertTrue(a[2] == ComplexMath.mult(a[0], a[1]));
+		});
+	}
+	
 }
