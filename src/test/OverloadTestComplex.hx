@@ -67,4 +67,26 @@ class OverloadTestComplex extends TestCase
 		
 	}
 	
+	function test4()
+	{
+		var c = new Complex(0, 10);
+		var c2:Complex;
+		
+		OverloadOperator.calc( {
+			for (i in 0...Std.int(c.im))
+			{
+				c = c + 0.1;
+			}
+			assertTrue(Math.abs(c.re - 1) < 0.00000001);
+			
+			c.re = 0;
+			for (i in 0...Std.int(c.im))
+			{
+				c += 0.1;
+			}
+
+			assertTrue(Math.abs(c.re - 1) < 0.00000001);
+		});
+	}
+	
 }
