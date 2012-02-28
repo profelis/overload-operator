@@ -14,9 +14,10 @@ Support operators
 ```
 
 ## Demo code:
+
+* ComplexMath.hx
+
 ```
-// 1.
-ComplexMath.hx
 ...
 
 @op("+", true) inline static public function add(a:Complex, b:Complex):Complex
@@ -51,12 +52,17 @@ ComplexMath.hx
 	return a.re == b.re && a.im == b.im;
 }
 ...
+```
 
-// 2.
+* Register math class
+
+```
 OverloadOperator.addMath(ComplexMath);
+```
 
-// 3.
-Test.hx
+* Test.hx
+
+```
 ...
 var c = new Complex(1, -3.0);
 var c2:Complex;
