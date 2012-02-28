@@ -101,23 +101,21 @@ class OverloadOperator
 								for (a in args) ts.push(a.t);
 							default:
 						}
-						var h = "";
-						for (t in ts) h += typeName(t) + "->";
-						h = h.substr(0, h.length - 2);
+						var key = o + ":";
+						for (t in ts) key += typeName(t) + "->";
+						if (ts.length > 0) key = key.substr(0, key.length - 2);
 						
-						var key = o + ":" + h;
 						var value = { expr:EField(typeExp, method.name), pos:pos };
 						//trace(key + "    " + value);
 						if (math.exists(key)) trace("Overriding existing method " + key);
 						math.set(key, value);
 						
-						if (com && ts.length == 2)
+						if (com && ts.length == 2 && ts[0] != ts[1])
 						{
 							ts.push(ts.shift());
-							h = "";
-							for (t in ts) h += typeName(t) + "->";
-							h = h.substr(0, h.length-2);
-							key = "C:" + o + ":" + h;
+							key = "C:" + o + ":";
+							for (t in ts) key += typeName(t) + "->";
+							if (ts.length > 0) key = key.substr(0, key.length - 2);
 							//trace(key + "    " + value);
 							if (math.exists(key)) trace("Overriding existing method " + key);
 							math.set(key, value);
@@ -284,7 +282,7 @@ class OverloadOperator
 				return { expr:ETry(parseExpr(e), catches), pos:pos };
 				
 			case EReturn(e):
-				return { expr:EReturn(e != null : parseExpr(e) : e), pos:pos };
+				return { expr:EReturn(e != null ? parseExpr(e) : e), pos:pos };
 				
 			case EThrow(e):
 				return { expr:EThrow(parseExpr(e)), pos:pos };
