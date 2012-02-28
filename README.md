@@ -1,17 +1,21 @@
 ## haXe operator overloading tool
 
 Macros @op(operator, [commutative=false])
+
 Support operators
+
+```
 + - * / % += -= *= /= %=
 < > == != <= >=
 & && | || ^ ! 
 << >> <<< ~
 ...
 ++x x++ --x x-- -x 
+```
 
 ## Demo code:
 ```
-[ComplexMath.hx](https://github.com/profelis/overload-operator/blob/master/src/deep/math/ComplexMath.hx)
+ComplexMath.hx
 ...
 
 @op("+", true) inline static public function add(a:Complex, b:Complex):Complex
