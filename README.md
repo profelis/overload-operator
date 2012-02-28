@@ -15,6 +15,7 @@ Support operators
 
 ## Demo code:
 ```
+// 1.
 ComplexMath.hx
 ...
 
@@ -51,6 +52,10 @@ ComplexMath.hx
 }
 ...
 
+// 2.
+OverloadOperator.addMath(ComplexMath);
+
+// 3.
 Test.hx
 ...
 var c = new Complex(1, -3.0);
