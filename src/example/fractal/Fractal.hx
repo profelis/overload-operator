@@ -33,7 +33,7 @@ class Fractal
 		OverloadOperator.addMath(ComplexMath);
 		
 		var bd = new BitmapData(800, 800, false, 0xFFFFFF);
-		fractal(40, new Complex(-0.008, 0.697), bd, false);
+		fractal(40, new Complex(-0.008, 0.697), bd, true);
 		
 		s.addChild(new Bitmap(bd));
 	}
@@ -54,6 +54,8 @@ class Fractal
 		var j = -h;
 		var k:Int;
 		var step = 40;
+		
+		var ts = Timer.stamp();
 		
 		var tick = function ():Void {
 			res.lock();
@@ -84,6 +86,7 @@ class Fractal
 					{
 						timer.stop();
 						timer = null;
+						trace("render time: " + (Timer.stamp() - ts));
 					}
 					return;
 				}
@@ -93,6 +96,7 @@ class Fractal
 		if (!timed)
 		{
 			for (k in 0...Std.int(2 * h / step)) tick();
+			trace("render time: " + (Timer.stamp() - ts));
 		}
 		else
 		{

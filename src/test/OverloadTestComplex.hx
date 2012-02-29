@@ -143,8 +143,19 @@ class OverloadTestComplex extends TestCase
 			assertTrue(cW == new Complex(0, 1));
 			
 			cProp = cR + cW;
-			cProp = cProp + 1.5;
+			cProp += 1.5;
 			assertTrue(cProp == _cProp);
+			
+			try 
+			{
+				a[2] += a[1];
+				assertTrue(false);
+			}
+			catch (e:Dynamic)
+			{
+				assertTrue(true);
+			}
+			
 			
 			a[2] = a[0] * a[1];
 			assertTrue(a[2] == ComplexMath.mult(a[0], a[1]));

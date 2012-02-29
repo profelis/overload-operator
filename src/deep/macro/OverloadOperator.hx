@@ -12,7 +12,12 @@ import haxe.macro.Type;
 
 class OverloadOperator 
 {
-
+	@:macro public static function self(e:Expr):Expr
+	{
+		trace(e);
+		return e;
+	}
+	
 	@:macro public static function calc(e:Expr):Expr
 	{
 		if (math == null)
@@ -164,6 +169,24 @@ class OverloadOperator
 					case OpAssignOp(op2):
 						assign = true;
 						op = op2;
+						var leftOk = false;
+						switch (e1.expr)
+						{
+							case EConst(c):
+								switch (c)
+								{
+									case CIdent(id):
+										// not ok, temporary ok :(
+										leftOk = true;
+									default:
+								}
+							case EArray(e1, e2): leftOk = true;
+							default:
+						}
+						if (!leftOk)
+						{
+							Context.error("supported only variables on the left side", e1.pos);
+						}
 					default:
 				}
 				var o = defaultOp.get(op) + (assign ? "=" : "");
