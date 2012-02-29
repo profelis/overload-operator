@@ -12,12 +12,6 @@ import haxe.macro.Type;
 
 class OverloadOperator 
 {
-	@:macro public static function self(e:Expr):Expr
-	{
-		trace(e);
-		return e;
-	}
-	
 	@:macro public static function calc(e:Expr):Expr
 	{
 		if (math == null)
@@ -152,10 +146,17 @@ class OverloadOperator
 				if (postFix) o = o.substr(-1) + o.substr(0, o.length - 1);
 				e1 = parseExpr(e1);
 				var t1 = typeOf(e1);
-				if (t1 == null) Context.error("can't recognize type", e1.pos);
+				if (t1 == null) Context.error("can't recognize type (EUnop)", e1.pos);
 				
 				var key = o + ":" + typeName(t1);
-				if (math.exists(key)) return { expr:ECall( math.get(key), [e1]), pos:pos };
+				if (math.exists(key))
+				{
+					var call = { expr:ECall( math.get(key), [e1]), pos:pos };
+					if (canAssign(e1))
+						return { expr:EBinop(OpAssign, e1, call ), pos:pos };
+					else
+						return call;
+				}
 				
 				return e;
 				
@@ -169,44 +170,38 @@ class OverloadOperator
 					case OpAssignOp(op2):
 						assign = true;
 						op = op2;
-						var leftOk = false;
-						switch (e1.expr)
-						{
-							case EConst(c):
-								switch (c)
-								{
-									case CIdent(id):
-										// not ok, temporary ok :(
-										leftOk = true;
-									default:
-								}
-							case EArray(e1, e2): leftOk = true;
-							default:
-						}
-						if (!leftOk)
-						{
-							Context.error("supported only variables on the left side", e1.pos);
-						}
 					default:
 				}
 				var o = defaultOp.get(op) + (assign ? "=" : "");
 				e1 = parseExpr(e1);
 				var t1 = typeOf(e1);
-				if (t1 == null) Context.error("can't recognize type", e1.pos);
+				if (t1 == null) Context.error("can't recognize type (EBinop,1)", e1.pos);
 				
 				e2 = parseExpr(e2);
 				var t2 = typeOf(e2);
-				if (t2 == null) Context.error("can't recognize type", e2.pos);
+				if (t2 == null) Context.error("can't recognize type (EBinop,2)", e2.pos);
 					
 				var key = o + ":" + typeName(t1) + "->" + typeName(t2);
 				if (math.exists(key))
 				{
-					return { expr:ECall( math.get(key), [e1, e2]), pos:pos };
+					
+					var call = { expr:ECall( math.get(key), [e1, e2]), pos:pos };
+					if (assign && canAssign(e1))
+						return { expr:EBinop(OpAssign, e1, call), pos:pos };
+					else
+						return call;
 				}
 				else
 				{
 					key = "C:" + key;
-					if (math.exists(key)) return { expr:ECall( math.get(key), [e2, e1]), pos:pos };
+					if (math.exists(key) && canAssign(e1))
+					{
+						var call = { expr:ECall( math.get(key), [e2, e1]), pos:pos };
+						if (assign)
+							return { expr:EBinop(OpAssign, e1, call), pos:pos };
+						else
+							return call;
+					}
 				}
 				
 				return e;
@@ -308,6 +303,7 @@ class OverloadOperator
 	static var defaultOp:Map < Dynamic, String > = {
 		defaultOp = new Map<Dynamic, String>();
 		// http://haxe.org/api/haxe/macro/binop
+		//defaultOp.set(OpAssign, "=");
 		defaultOp.set(OpAdd, "+");
 		defaultOp.set(OpSub, "-");
 		defaultOp.set(OpMult, "*");
@@ -335,6 +331,25 @@ class OverloadOperator
 		defaultOp.set(OpNeg, "-x");
 		defaultOp.set(OpNegBits, "~");
 		defaultOp;
+	}
+	
+	static function canAssign(e:Expr):Bool
+	{
+		switch (e.expr)
+		{
+			case EConst(ec):
+				switch (ec)
+				{
+					case CIdent(cid): return true;
+					default:
+				}
+			case EArray(e1, e2):
+				return true;
+			case EField(e, field):
+				return true;
+			default:
+		}
+		return false;
 	}
 	
 	static function typeName(t:Type):String
