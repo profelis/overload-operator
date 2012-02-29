@@ -68,6 +68,7 @@ class Fractal
 						
 						OverloadOperator.calc( {
 							z.sqr() += c;
+							// ComplexMath.iadd(ComplexMath.sqr(z),c);
 						});
 						
 						if (z.abs2() > 1.0E16) break;
