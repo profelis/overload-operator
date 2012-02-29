@@ -21,9 +21,8 @@ class Complex
 		return "[Complex: " + re + ", " + im + "]";
 	}
 	
-	public function clone()
+	inline public function clone()
 	{
 		return new Complex(re, im);
 	}
-	
 }

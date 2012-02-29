@@ -135,6 +135,7 @@ class OverloadOperator
 	
 	static function parseExpr(e:Expr):Expr
 	{
+		if (e == null) return e;
 		var pos = e.pos;
 		switch (e.expr)
 		{

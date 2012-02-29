@@ -47,7 +47,7 @@ class ComplexMath
 	
 	@op("/", true) inline static public function div(a:Complex, b:Complex):Complex
 	{
-		var div = 1 / (b.re * b.re + b.im * b.im);
+		var div = 1 / abs2(b);
 		return new Complex((a.re * b.re + a.im * b.im) * div, (a.re * b.im + a.im * b.re) * div);
 	}
 	
@@ -102,7 +102,7 @@ class ComplexMath
 	{
 		var are = a.re;
 		var bre = b.re;
-		var div = 1 / (bre * bre + b.im * b.im);
+		var div = 1 / abs2(b);
 		a.re = (are * bre + a.im * b.im) * div;
 		a.im = (are * b.im + a.im * bre) * div;
 		return a;
@@ -133,6 +133,25 @@ class ComplexMath
 	@op("!=", true) public static function notEqFloat(a:Complex, b:Float):Bool
 	{
 		return a.re != b || a.im != 0;
+	}
+	
+	inline static public function sqr(c:Complex):Complex
+	{
+		var tim = 2 * c.re * c.im;
+		c.re = c.re * c.re - c.im * c.im;
+		c.im = tim;
+		
+		return c;
+	}
+	
+	inline static public function abs(c:Complex):Float
+	{
+		return Math.sqrt(c.re * c.re + c.im * c.im);
+	}
+	
+	inline static public function abs2(c:Complex):Float
+	{
+		return c.re * c.re + c.im * c.im;
 	}
 	
 }

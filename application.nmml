@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	<!-- metadata, make sure 'package' is at least 2 segments (ie. com.myproject) -->
-	<app file="Complex" title="Complex" main="Main" package="deep.complex.test" 
+	<app file="Complex" title="Complex" main="example.fractal.Fractal" package="deep.complex.test" 
 		version="1.0.0" company="deep <system.grand@gmail.com>" />
 		
 	<!-- output -->
-	<window width="800" height="480" fps="60" background="0xFFFFFF" orientation="landscape" resizable="true" />
+	<window width="800" height="800" fps="60" background="0xFFFFFF" orientation="landscape" resizable="true" />
 	<set name="BUILD_DIR" value="bin" />
 	
 	<!-- classpath, haxe libs -->
