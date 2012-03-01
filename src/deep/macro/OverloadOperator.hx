@@ -385,7 +385,6 @@ class OverloadOperator
 		}
 		if (type == null)
 		{
-			trace(t);
 			Context.error("unknown type name '" + t + "'", Context.currentPos());
 		}
 		return type.pack.join(".") + (type.pack.length > 0 ? "." : "") + type.name;
@@ -393,15 +392,10 @@ class OverloadOperator
 	
 	static function typeOf(e:Expr):Type
 	{
-		try 
-		{
-			var t = Context.typeof(e);
-			return Context.follow(t);
-		}
-		catch (e:Dynamic)
-		{
-			return null;
-		}
+		if (e == null) return null;
+		
+		var t = Context.typeof(e);
+		return Context.follow(t);
 	}
 
 	#end
