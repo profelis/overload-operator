@@ -70,10 +70,11 @@ class Fractal
 						
 						OverloadOperator.calc( {
 							z.sqr() += c;
-							// ComplexMath.iadd(ComplexMath.sqr(z),c);
+							//z += c;
+							//ComplexMath.iadd(z,c);
 						});
 						
-						if (z.abs2() > 1.0E16) break;
+						if (z.abs2() > 1.0E10) break;
 						k++;
 					}
 					res.setPixel(i + w, j + h, fromHSV((k / randomSeed) * 360));

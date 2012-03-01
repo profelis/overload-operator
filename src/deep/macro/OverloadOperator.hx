@@ -194,10 +194,10 @@ class OverloadOperator
 				else
 				{
 					key = "C:" + key;
-					if (math.exists(key) && canAssign(e1))
+					if (math.exists(key))
 					{
 						var call = { expr:ECall( math.get(key), [e2, e1]), pos:pos };
-						if (assign)
+						if (assign && canAssign(e1))
 							return { expr:EBinop(OpAssign, e1, call), pos:pos };
 						else
 							return call;
