@@ -341,6 +341,7 @@ class OverloadOperator
 				switch (ec)
 				{
 					case CIdent(cid): return true;
+					case CType(cid): return true;
 					default:
 				}
 			case EArray(e1, e2):
