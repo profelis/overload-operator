@@ -27,12 +27,18 @@ class A
 	}
 }
 
+enum ComplexRef 
+{
+	Ref(c:Complex);
+	Ref2(c:Complex, b:Complex);
+	Null;
+}
+
 class OverloadTestComplex extends TestCase, implements IOverloadOperator<ComplexMath>
 {
 
 	public function new() 
 	{
-		OverloadOperator.addMath(ComplexMath);
 		super();
 	}
 	
@@ -62,10 +68,10 @@ class OverloadTestComplex extends TestCase, implements IOverloadOperator<Complex
 	{
 		var c:Complex = new Complex(1, -3.0);
 		var c2:Complex = new Complex(0, c.re);
-		//c.im = 0;
-		//c /= c2;
+		c.im = 0;
+		c /= c2;
 		
-		var c3:Complex = c + c2;
+		var c3 = c + c2;
 		
 		assertTrue(c3 == ComplexMath.add(c, c2));
 	}
@@ -158,6 +164,54 @@ class OverloadTestComplex extends TestCase, implements IOverloadOperator<Complex
 		
 		assertTrue(a.a != new Complex( -1));
 		assertTrue(a.a == new Complex( 1));
+	}
+	
+	function test9()
+	{
+		
+		try
+		{
+			throw new Complex(1, 2);
+		}
+		catch (e:Complex)
+		{
+			assertTrue(e + 3.0 == new Complex(4, 2));
+		}
+		catch (d:Dynamic)
+		{
+			assertTrue(false);
+		}
+		
+		var r = Ref(new Complex(0, 1));
+		switch (r)
+		{
+			case Ref(tc):
+				tc *= tc;
+				assertTrue(tc == new Complex( -1, 0));
+			default:
+				assertTrue(false);
+		}
+		
+		var d = Ref2(new Complex(1, 0), new Complex(0, 1));
+		switch (d)
+		{
+			case Ref2(a, b):
+				assertTrue(a + b == new Complex(1, 1));
+			case Ref(a):
+				assertFalse(true);
+			default:
+				assertFalse(true);
+		}
+		
+		switch (d)
+		{
+			case Ref2(_, b):
+				assertTrue(b == new Complex(0, 1));
+			case Ref(a):
+				assertFalse(true);
+			default:
+				assertFalse(true);
+		}
 	}
 	
 }

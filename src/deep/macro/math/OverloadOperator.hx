@@ -378,15 +378,66 @@ class OverloadOperator
 				if (edef != null) edef = parseExpr(edef, ctx);
 				for (c in cases)
 				{
-					c.expr = parseExpr(c.expr, ctx);
 					var nvalues = new Array<Expr>();
 					for (i in c.values) nvalues.push(parseExpr(i, ctx));
+					var nctx = ctx.copy();
+					for (i in nvalues)
+					{ 
+						var types = new Array<haxe.macro.Type>();
+						var ids = new Array<String>();
+						switch (i.expr)
+						{
+							case ECall(e, params):
+								switch (Context.follow(Context.typeof(e)))
+								{
+									case haxe.macro.Type.TFun(args, t):
+										for (a in args) types.push(a.t);
+									default:
+									
+								}
+								if (types.length > 0)
+								{
+									for (p in params)
+										switch (p.expr)
+										{
+											case EConst(ec):
+												switch (ec)
+												{
+													case CIdent(t), CType(t): ids.push(t);
+													default:
+												}
+											default:
+										}
+									
+									if (types.length == ids.length)
+										for (type in types)
+										{
+											switch (type)
+											{
+												case haxe.macro.Type.TInst(t, params):
+													var ct = TPath( { sub: null, name: t.get().name, pack: t.get().pack, params: [] } );
+													nctx.push( { name:ids.shift(), type:ct, expr:null } );
+													
+												default:
+											}
+										}
+								}
+								
+							default:
+						}
+					}
+					c.expr = parseExpr(c.expr, nctx);
 					c.values = nvalues;
 				}
 				return { expr:ESwitch(parseExpr(e, ctx), cases, edef), pos:pos };
 				
 			case ETry(e, catches):
-				for (c in catches) c.expr = parseExpr(c.expr, ctx);
+				for (c in catches)
+				{
+					var nctx = ctx.copy();
+					nctx.push( { name:c.name, type:c.type, expr:null } );
+					c.expr = parseExpr(c.expr, nctx);
+				}
 				return { expr:ETry(parseExpr(e, ctx), catches), pos:pos };
 				
 			case EReturn(e):
