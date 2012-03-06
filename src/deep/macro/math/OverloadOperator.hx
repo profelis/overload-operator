@@ -57,20 +57,19 @@ class OverloadOperator
 			{
 				case FVar(t, e):
 					if (e != null)
-						f.kind = FieldType.FVar(t, parseExpr(e, Lambda.array(ctx)));
+						f.kind = FieldType.FVar(t, parseExpr(e, ctx.copy()));
 					nfields.push(f);
 				case FProp(get, set, t, e):
 					if (e != null)
-						f.kind = FProp(get, set, t, parseExpr(e, Lambda.array(ctx)));
+						f.kind = FProp(get, set, t, parseExpr(e, ctx.copy()));
 					nfields.push(f);
 				case FFun(fn):
 					if (fn.expr != null)
-						fn.expr = parseExpr(fn.expr, Lambda.array(ctx));
+						fn.expr = parseExpr(fn.expr, ctx.copy());
 					nfields.push(f);
 				default:
 			}
 		}
-
 		return nfields;
 	}
 	
@@ -216,11 +215,12 @@ class OverloadOperator
 				var o = defaultOp.get(op) + (assign ? "=" : "");
 				e1 = parseExpr(e1, ctx);
 				var t1 = typeOf(e1, ctx);
+				//trace(o + "  " + t1);
 				if (t1 == null) Context.error("can't recognize type (EBinop,1)", e1.pos);
 				
 				e2 = parseExpr(e2, ctx);
-				
 				var t2 = typeOf(e2, ctx);
+				//trace(o + "  " + t2);
 				if (t2 == null) Context.error("can't recognize type (EBinop,2)", e2.pos);
 
 				var key = o + ":" + typeName(t1) + "->" + typeName(t2);
@@ -253,7 +253,7 @@ class OverloadOperator
 				
 			case EBlock(exprs):
 				var nexprs = new Array<Expr>();
-				var innerCtx = Lambda.array(ctx);
+				var innerCtx = ctx.copy();
 				for (i in exprs)
 					nexprs.push(parseExpr(i, innerCtx));
 				return { expr:EBlock(nexprs), pos:pos };
@@ -270,8 +270,8 @@ class OverloadOperator
 			case EVars(vars):
 				for (i in vars)
 				{
-					ctx.push(i);
 					i.expr = parseExpr(i.expr, ctx);
+					ctx.push(i);
 				}
 				return { expr:EVars(vars), pos:pos };
 				
