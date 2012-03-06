@@ -242,7 +242,7 @@ class OverloadOperator
 				
 			case EBlock(exprs):
 				var nexprs = new Array<Expr>();
-				var innerCtx = [];
+				var innerCtx = Lambda.array(ctx);
 				for (i in exprs)
 					nexprs.push(parseExpr(i, innerCtx));
 				return { expr:EBlock(nexprs), pos:pos };
