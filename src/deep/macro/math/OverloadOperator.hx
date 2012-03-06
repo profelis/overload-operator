@@ -22,6 +22,23 @@ class OverloadOperator
 		
 		var fields = Context.getBuildFields();
 		var nfields = new Array<Field>();
+		var ctx = [];
+		
+		for (f in fields)
+		{
+			switch(f.kind)
+			{
+				case FVar(t, e):
+					ctx.push({name:f.name, type:t, expr:e });
+				case FProp(get, set, t, e):
+					ctx.push( { name:f.name, type:t, expr:e } );
+				default:
+				case FFun(fn):
+					var argTypes = Lambda.array(Lambda.map(fn.args, function(arg) return arg.type));
+					ctx.push( { name:f.name, type:TFunction(argTypes, fn.ret != null ? fn.ret : TPath({name:"Dynamic", pack:[], sub:null, params:[]})), expr:null } );
+			}
+		}
+
 		for (f in fields)
 		{
 			var ignore = false;
@@ -34,32 +51,25 @@ class OverloadOperator
 				}
 			}
 			if (ignore) continue;
-			
+
 			switch (f.kind)
 			{
 				case FVar(t, e):
 					if (e != null)
-					{
-						f.kind = FieldType.FVar(t, parseExpr(e, []));
-						nfields.push(f);
-					}
+						f.kind = FieldType.FVar(t, parseExpr(e, Lambda.array(ctx)));
+					nfields.push(f);
 				case FProp(get, set, t, e):
 					if (e != null)
-					{
-						f.kind = FProp(get, set, t, parseExpr(e, []));
-						nfields.push(f);
-					}
-				
+						f.kind = FProp(get, set, t, parseExpr(e, Lambda.array(ctx)));
+					nfields.push(f);
 				case FFun(fn):
 					if (fn.expr != null)
-					{
-						fn.expr = parseExpr(fn.expr, []);
-						nfields.push(f);
-					}
+						fn.expr = parseExpr(fn.expr, Lambda.array(ctx));
+					nfields.push(f);
 				default:
 			}
 		}
-		
+
 		return nfields;
 	}
 	
@@ -400,11 +410,10 @@ class OverloadOperator
 				t = ret;
 				
 			case TDynamic(t2):
-				t = t2;
-				
+					t = t2;
 			default:
 		}
-		
+
 		switch (t)
 		{		
 			case TInst(t, params):
@@ -415,7 +424,6 @@ class OverloadOperator
 				
 			case TType(t, params):
 				type = t.get();
-				
 			default:
 		}
 		if (type == null)
@@ -427,7 +435,7 @@ class OverloadOperator
 	
 	static function typeOf(e:Expr, ctx:IdentDef):Type
 	{
-		var t = Context.typeof({pos:e.pos, expr:EBlock([{pos:e.pos, expr:EVars(ctx)}, e])});
+		var t = Context.typeof( { pos:e.pos, expr:EBlock([ { pos:e.pos, expr:EVars(ctx) }, e]) } );
 		return Context.follow(t);
 	}
 
