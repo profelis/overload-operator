@@ -29,9 +29,9 @@ class OverloadOperator
 			switch(f.kind)
 			{
 				case FVar(t, e):
-					ctx.push({name:f.name, type:t, expr:e });
+					ctx.push({name:f.name, type:t, expr:null });
 				case FProp(get, set, t, e):
-					ctx.push( { name:f.name, type:t, expr:e } );
+					ctx.push( { name:f.name, type:t, expr:null } );
 				default:
 				case FFun(fn):
 					var argTypes = Lambda.array(Lambda.map(fn.args, function(arg) return arg.type));
@@ -51,7 +51,11 @@ class OverloadOperator
 					break;
 				}
 			}
-			if (ignore) continue;
+			if (ignore)
+			{
+				nfields.push(f);
+				continue;
+			}
 
 			switch (f.kind)
 			{
@@ -65,7 +69,15 @@ class OverloadOperator
 					nfields.push(f);
 				case FFun(fn):
 					if (fn.expr != null)
-						fn.expr = parseExpr(fn.expr, ctx.copy());
+					{
+						var nctx = ctx.copy();
+						for (arg in fn.args)
+						{
+							nctx.push({name:arg.name, type:arg.type, expr:arg.value});
+						}
+					
+						fn.expr = parseExpr(fn.expr, nctx);
+					}
 					nfields.push(f);
 				default:
 			}
@@ -215,12 +227,11 @@ class OverloadOperator
 				var o = defaultOp.get(op) + (assign ? "=" : "");
 				e1 = parseExpr(e1, ctx);
 				var t1 = typeOf(e1, ctx);
-				//trace(o + "  " + t1);
 				if (t1 == null) Context.error("can't recognize type (EBinop,1)", e1.pos);
 				
 				e2 = parseExpr(e2, ctx);
 				var t2 = typeOf(e2, ctx);
-				//trace(o + "  " + t2);
+				//trace(o + "  " + t1 + " " + t2);
 				if (t2 == null) Context.error("can't recognize type (EBinop,2)", e2.pos);
 
 				var key = o + ":" + typeName(t1) + "->" + typeName(t2);
@@ -274,6 +285,19 @@ class OverloadOperator
 					ctx.push(i);
 				}
 				return { expr:EVars(vars), pos:pos };
+				
+			case EFunction(name, fn):
+				//var argTypes = Lambda.array(Lambda.map(fn.args, function(arg) return arg.type));
+				//ctx.push( { name:name, type:TFunction(argTypes, fn.ret), expr:null } );
+				
+				var nctx = ctx.copy();
+				for (arg in fn.args)
+				{
+					nctx.push({name:arg.name, type:arg.type, expr:arg.value});
+				}
+				fn.expr = parseExpr(fn.expr, nctx);
+				
+				return { expr:EFunction(name, fn), pos:pos };
 				
 			case EUntyped(e):
 				return { expr:EUntyped(parseExpr(e, ctx)), pos:pos };
@@ -405,7 +429,8 @@ class OverloadOperator
 		switch (t)
 		{
 			case TMono(t2):
-				if (t2 != null) t = t2.get();
+				t = t2.get();
+				if (t == null) return "null";
 				
 			case TFun(args, ret):
 				t = ret;
@@ -414,19 +439,19 @@ class OverloadOperator
 					t = t2;
 			default:
 		}
-
-		switch (t)
-		{		
-			case TInst(t, params):
-				type = t.get();
-			
-			case TEnum(t, params):
-				type = t.get();
+		if (t != null)
+			switch (t)
+			{		
+				case TInst(t, params):
+					type = t.get();
 				
-			case TType(t, params):
-				type = t.get();
-			default:
-		}
+				case TEnum(t, params):
+					type = t.get();
+					
+				case TType(t, params):
+					type = t.get();
+				default:
+			}
 		if (type == null)
 		{
 			Context.error("unknown type name '" + t + "'", Context.currentPos());

@@ -1,5 +1,5 @@
 package example.fractal;
-import deep.macro.OverloadOperator;
+import deep.macro.math.IOverloadOperator;
 import deep.math.Complex;
 import deep.math.ComplexMath;
 import haxe.Timer;
@@ -17,20 +17,19 @@ import nme.Lib;
 
 using deep.math.ComplexMath;
  
-class Fractal
+class Fractal implements IOverloadOperator<ComplexMath>
 {
-	public static function main()
+	@noOverload public static function main()
 	{
 		new Fractal();
 	}
 	
-	public function new() 
+	@noOverload public function new() 
 	{
 		var s = Lib.current.stage;
 		s.scaleMode = StageScaleMode.NO_SCALE;
 		s.align = StageAlign.TOP_LEFT;
 		
-		OverloadOperator.addMath(ComplexMath);
 		
 		var bd = new BitmapData(800, 800, false, 0xFFFFFF);
 		fractal(40, new Complex(-0.008, 0.697), bd, true);
@@ -68,11 +67,8 @@ class Fractal
 					k = 0;
 					while (k < randomSeed) {
 						
-						OverloadOperator.calc( {
-							z.sqr() += c;
-							//z += c;
-							//ComplexMath.iadd(z,c);
-						});
+						z.sqr();
+						z += c;
 						
 						if (z.abs2() > 1.0E10) break;
 						k++;
@@ -107,7 +103,7 @@ class Fractal
 		}
 	}
 	
-	inline static function fromHSV(hue:Float):Int
+	@noOverload	inline static function fromHSV(hue:Float):Int
     {
 		var h:Float = (hue  + 360) % 360;
 		var v:Float = 1;
@@ -125,6 +121,7 @@ class Fractal
 		else return 0;
 	}
 	
+	@noOverload
 	inline static function fromFloats(red:Float, green:Float, blue:Float):Int
 	{
 		return 0x10000*Math.round(red*0xFF) + 0x100*Math.round(green*0xFF) + Math.round(blue*0xFF);
