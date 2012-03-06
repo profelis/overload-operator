@@ -9,12 +9,30 @@ import haxe.unit.TestCase;
  * ...
  * @author deep <system.grand@gmail.com>
  */
+class A
+{
+	public var a:Complex;
+	
+	public var b(getB, setB):Complex;
+	
+	private var _b:Complex;
+	
+	function getB() { return _b; }
+	
+	function setB(v:Complex) { a = v; return _b = v; }
+	
+	public function new()
+	{
+		a = new Complex(0, 1);
+	}
+}
 
 class OverloadTestComplex extends TestCase, implements IOverloadOperator<ComplexMath>
 {
 
 	public function new() 
 	{
+		OverloadOperator.addMath(ComplexMath);
 		super();
 	}
 	
@@ -128,6 +146,18 @@ class OverloadTestComplex extends TestCase, implements IOverloadOperator<Complex
 		
 		a[2] = a[0] * a[1];
 		assertTrue(a[2] == ComplexMath.mult(a[0], a[1]));
+	}
+	
+	function test8()
+	{
+		var a:A = new A();
+		a.a *= new Complex(0, 1);
+		assertTrue(a.a == new Complex( -1));
+		
+		a.b = new Complex(1);
+		
+		assertTrue(a.a != new Complex( -1));
+		assertTrue(a.a == new Complex( 1));
 	}
 	
 }

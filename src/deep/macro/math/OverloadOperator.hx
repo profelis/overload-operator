@@ -2,7 +2,6 @@ package deep.macro.math;
 
 #if macro
 import haxe.macro.Context;
-import haxe.macro.Type;
 import haxe.macro.Expr;
 #end
 
@@ -15,10 +14,35 @@ import deep.math.ComplexMath;
 
 class OverloadOperator 
 {
+	@:macro public static function addMath(m:ExprRequire<Class<Dynamic>>):Expr
+	{
+		var type:haxe.macro.Type;
+		var pos = m.pos;
+		switch (m.expr)
+		{
+			case EConst(c):
+				switch (c)
+				{
+					case CType(s):
+						type = Context.getType(s);
+					default:
+				}
+			case EType(e, field):
+				type = Context.getType(field);
+				
+			default:
+		}
+		if (type == null) Context.error("Math is unknown", pos);
+		
+		registerMath(type);
+		
+		return {expr:EConst(CIdent("null")), pos:pos};
+	}
+	
 	#if macro
 	public static function build():Array<Field>
 	{
-		addMath(getDataType(Context.getLocalClass().get()));
+		registerMath(getDataType(Context.getLocalClass().get()));
 		
 		var fields = Context.getBuildFields();
 		var nfields = new Array<Field>();
@@ -85,7 +109,7 @@ class OverloadOperator
 		return nfields;
 	}
 	
-	static function getDataType(cls:ClassType):haxe.macro.Type
+	static function getDataType(cls:haxe.macro.Type.ClassType):haxe.macro.Type
 	{
 		for (i in cls.interfaces)
 		{
@@ -93,11 +117,23 @@ class OverloadOperator
 			return i.params[0];
 		}
 		
-		return Context.error("Must implement IOverloadOperator.", Context.currentPos());
+		Context.error("Must implement IOverloadOperator.", Context.currentPos());
+		return null;
 	}	
-
-	static public function addMath(type)
+	
+	static var math:Hash<Expr>;
+	static var maths:Array<String>;
+	
+	static function registerMath(type:haxe.macro.Type)
 	{
+		type = Context.follow(type);
+		if (maths == null) 
+			maths = new Array<String>();
+		else
+			if (Lambda.indexOf(maths, typeName(type)) != -1)  return;
+		
+		maths.push(typeName(type));
+		
 		var pos = Context.currentPos();
 		var typeExp:Expr;
 		if (math == null) math = new Hash<Expr>();
@@ -178,8 +214,6 @@ class OverloadOperator
 			default:
 		}
 		if (typeExp == null) Context.error("Can't parse math", pos);
-		
-		return {expr:EConst(CIdent("null")), pos:pos};
 	}
 
 	static function parseExpr(e:Expr, ctx:IdentDef):Expr
@@ -369,8 +403,6 @@ class OverloadOperator
 		return e;
 	}
 	
-	static var math:Hash<Expr>;
-	
 	static var defaultOp:Map < Dynamic, String > = {
 		defaultOp = new Map<Dynamic, String>();
 		// http://haxe.org/api/haxe/macro/binop
@@ -423,10 +455,10 @@ class OverloadOperator
 		return false;
 	}
 	
-	static function typeName(t:Type):String
+	static function typeName(t:haxe.macro.Type):String
 	{
 		t = Context.follow(t);
-		var type:BaseType;
+		var type:haxe.macro.Type.BaseType;
 		switch (t)
 		{
 			case TMono(t2):
@@ -460,7 +492,7 @@ class OverloadOperator
 		return type.pack.join(".") + (type.pack.length > 0 ? "." : "") + type.name;
 	}
 	
-	static function typeOf(e:Expr, ctx:IdentDef):Type
+	static function typeOf(e:Expr, ctx:IdentDef):haxe.macro.Type
 	{
 		var t = Context.typeof( { pos:e.pos, expr:EBlock([ { pos:e.pos, expr:EVars(ctx) }, e]) } );
 		return Context.follow(t);
