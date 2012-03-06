@@ -35,7 +35,8 @@ class OverloadOperator
 				default:
 				case FFun(fn):
 					var argTypes = Lambda.array(Lambda.map(fn.args, function(arg) return arg.type));
-					ctx.push( { name:f.name, type:TFunction(argTypes, fn.ret != null ? fn.ret : TPath({name:"Dynamic", pack:[], sub:null, params:[]})), expr:null } );
+					if (fn.ret != null)
+						ctx.push( { name:f.name, type:TFunction(argTypes, fn.ret), expr:null } );
 			}
 		}
 
