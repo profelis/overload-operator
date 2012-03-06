@@ -368,6 +368,8 @@ class OverloadOperator
 				switch (it.expr)
 				{
 					case EIn(e1, e2): // e1 in e2
+						e1 = parseExpr(e1, ctx);
+						e2 = parseExpr(e2, ctx);
 						switch (e1.expr)
 						{
 							case EConst(c):
