@@ -470,7 +470,7 @@ class OverloadOperator
 													var ct = TPath( { sub: null, name: t.get().name, pack: t.get().pack, params: [] } );
 													nctx.push( { name:ids.shift(), type:ct, expr:null } );
 													
-												default:
+												default: nctx.push( { name:ids.shift(), type:null, expr:null } );
 											}
 										}
 									}
