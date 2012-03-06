@@ -18,8 +18,8 @@ class OverloadOperator
 	#if macro
 	public static function build():Array<Field>
 	{
-		addMath(ComplexMath);
-
+		addMath(getDataType(Context.getLocalClass().get()));
+		
 		var fields = Context.getBuildFields();
 		var nfields = new Array<Field>();
 		for (f in fields)
@@ -62,43 +62,21 @@ class OverloadOperator
 		
 		return nfields;
 	}
-	#end
 	
-	@:macro public static function calc(e:Expr):Expr
+	static function getDataType(cls:ClassType):haxe.macro.Type
 	{
-		if (math == null)
-			Context.error("add math first", e.pos);
-		
-		return parseExpr(e, []);
-	}
-	
-	@:macro public static function clearMath():Expr
-	{
-		math = null;
-		return {expr:EConst(CIdent("null")), pos:Context.currentPos()};
-	}
-	
-	@:macro public static function addMath(m:ExprRequire<Class<Dynamic>>)
-	{
-		var type:Type;
-		var pos = m.pos;
-		switch (m.expr)
+		for (i in cls.interfaces)
 		{
-			case EConst(c):
-				switch (c)
-				{
-					case CType(s):
-						type = Context.getType(s);
-					default:
-				}
-			case EType(e, field):
-				type = Context.getType(field);
-				
-			default:
+			if (i.t.get().name == "IOverloadOperator")
+			return i.params[0];
 		}
-		if (type == null) Context.error("Math is unknown", pos);
-		type = Context.follow(type);
 		
+		return Context.error("Must implement IOverloadOperator.", Context.currentPos());
+	}	
+
+	static public function addMath(type)
+	{
+		var pos = Context.currentPos();
 		var typeExp:Expr;
 		if (math == null) math = new Hash<Expr>();
 		switch (type)
@@ -182,7 +160,6 @@ class OverloadOperator
 		return {expr:EConst(CIdent("null")), pos:pos};
 	}
 	
-	#if macro
 
 	static function parseExpr(e:Expr, ctx:IdentDef):Expr
 	{

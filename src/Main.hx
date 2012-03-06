@@ -11,7 +11,7 @@ import nme.geom.Point;
  * ...
  * @author deep <system.grand@gmail.com>
  */
-class Main implements IOverloadOperator
+class Main implements IOverloadOperator<ComplexMath>
 {
 	
 	static public function main() 
@@ -22,7 +22,7 @@ class Main implements IOverloadOperator
 		r.run();
 		*/
 		
-		OverloadOperator.addMath(ComplexMath);
+		//OverloadOperator.addMath(ComplexMath);
 		
 		new Main();
 	}
@@ -35,7 +35,7 @@ class Main implements IOverloadOperator
 		var c2:Complex = new Complex(3, 4);
 		//trace(c + c2);
 		//trace(c == c2);
-		c1 + c2;
+		trace(c1 + c2);
 	}
 }
 
