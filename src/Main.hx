@@ -1,5 +1,4 @@
 package ;
-import deep.math.ComplexMath;
 import haxe.unit.TestRunner;
 import test.OverloadTestComplex;
 

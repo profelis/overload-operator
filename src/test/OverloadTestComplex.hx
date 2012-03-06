@@ -1,6 +1,5 @@
 package test;
 import deep.macro.math.IOverloadOperator;
-import deep.macro.math.OverloadOperator;
 import deep.math.Complex;
 import deep.math.ComplexMath;
 import haxe.unit.TestCase;

@@ -5,8 +5,6 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 #end
 
-import deep.math.ComplexMath;
-
 /**
  * ...
  * @author deep <system.grand@gmail.com>
