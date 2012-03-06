@@ -181,7 +181,6 @@ class OverloadOperator
 		
 		return {expr:EConst(CIdent("null")), pos:pos};
 	}
-	
 
 	static function parseExpr(e:Expr, ctx:IdentDef):Expr
 	{
@@ -287,9 +286,11 @@ class OverloadOperator
 				return { expr:EVars(vars), pos:pos };
 				
 			case EFunction(name, fn):
-				//var argTypes = Lambda.array(Lambda.map(fn.args, function(arg) return arg.type));
-				//ctx.push( { name:name, type:TFunction(argTypes, fn.ret), expr:null } );
-				
+				if (name != null)
+				{
+					var argTypes = Lambda.array(Lambda.map(fn.args, function(arg) return arg.type));
+					ctx.push( { name:name, type:TFunction(argTypes, fn.ret), expr:null } );
+				}
 				var nctx = ctx.copy();
 				for (arg in fn.args)
 				{

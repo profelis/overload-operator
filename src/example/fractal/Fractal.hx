@@ -56,7 +56,7 @@ class Fractal implements IOverloadOperator<ComplexMath>
 		
 		var ts = Timer.stamp();
 		
-		var tick = function ():Void {
+		function tick():Void {
 			res.lock();
 			for (t in 0...step)
 			{
@@ -79,6 +79,7 @@ class Fractal implements IOverloadOperator<ComplexMath>
 				j++;
 				if (j > h)
 				{
+					res.unlock();
 					if (timer != null)
 					{
 						timer.stop();
