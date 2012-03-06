@@ -6,6 +6,8 @@ import haxe.macro.Type;
 import haxe.macro.Expr;
 #end
 
+import deep.math.ComplexMath;
+
 /**
  * ...
  * @author deep <system.grand@gmail.com>
@@ -16,9 +18,28 @@ class OverloadOperator
 	#if macro
 	public static function build():Array<Field>
 	{
-		trace("autoBuild");
+		addMath(getDataType(Context.getLocalClass().get()));
+		
 		var fields = Context.getBuildFields();
 		var nfields = new Array<Field>();
+		var ctx = [];
+		
+		for (f in fields)
+		{
+			switch(f.kind)
+			{
+				case FVar(t, e):
+					ctx.push({name:f.name, type:t, expr:e });
+				case FProp(get, set, t, e):
+					ctx.push( { name:f.name, type:t, expr:e } );
+				default:
+				case FFun(fn):
+					var argTypes = Lambda.array(Lambda.map(fn.args, function(arg) return arg.type));
+					if (fn.ret != null)
+						ctx.push( { name:f.name, type:TFunction(argTypes, fn.ret), expr:null } );
+			}
+		}
+
 		for (f in fields)
 		{
 			var ignore = false;
@@ -31,74 +52,42 @@ class OverloadOperator
 				}
 			}
 			if (ignore) continue;
-			
+
 			switch (f.kind)
 			{
 				case FVar(t, e):
 					if (e != null)
-					{
-						f.kind = FieldType.FVar(t, parseExpr(e));
-						nfields.push(f);
-					}
+						f.kind = FieldType.FVar(t, parseExpr(e, Lambda.array(ctx)));
+					nfields.push(f);
 				case FProp(get, set, t, e):
 					if (e != null)
-					{
-						f.kind = FProp(get, set, t, parseExpr(e));
-						nfields.push(f);
-					}
-				
+						f.kind = FProp(get, set, t, parseExpr(e, Lambda.array(ctx)));
+					nfields.push(f);
 				case FFun(fn):
 					if (fn.expr != null)
-					{
-						fn.expr = parseExpr(fn.expr);
-						nfields.push(f);
-					}
+						fn.expr = parseExpr(fn.expr, Lambda.array(ctx));
+					nfields.push(f);
 				default:
 			}
 		}
-		trace(nfields);
-		//if (nfields.length > 0)
-		//	return nfields;
-		
-		return null;
-	}
-	#end
-	
-	@:macro public static function calc(e:Expr):Expr
-	{
-		if (math == null)
-			Context.error("add math first", e.pos);
-		
-		return parseExpr(e);
+
+		return nfields;
 	}
 	
-	@:macro public static function clearMath():Expr
+	static function getDataType(cls:ClassType):haxe.macro.Type
 	{
-		math = null;
-		return {expr:EConst(CIdent("null")), pos:Context.currentPos()};
-	}
-	
-	@:macro public static function addMath(m:ExprRequire<Class<Dynamic>>)
-	{
-		var type:Type;
-		var pos = m.pos;
-		switch (m.expr)
+		for (i in cls.interfaces)
 		{
-			case EConst(c):
-				switch (c)
-				{
-					case CType(s):
-						type = Context.getType(s);
-					default:
-				}
-			case EType(e, field):
-				type = Context.getType(field);
-				
-			default:
+			if (i.t.get().name == "IOverloadOperator")
+			return i.params[0];
 		}
-		if (type == null) Context.error("Math is unknown", pos);
-		type = Context.follow(type);
 		
+		return Context.error("Must implement IOverloadOperator.", Context.currentPos());
+	}	
+
+	static public function addMath(type)
+	{
+		var pos = Context.currentPos();
 		var typeExp:Expr;
 		if (math == null) math = new Hash<Expr>();
 		switch (type)
@@ -182,9 +171,8 @@ class OverloadOperator
 		return {expr:EConst(CIdent("null")), pos:pos};
 	}
 	
-	#if macro
-	
-	static function parseExpr(e:Expr):Expr
+
+	static function parseExpr(e:Expr, ctx:IdentDef):Expr
 	{
 		//trace(e);
 		if (e == null) return e;
@@ -197,8 +185,8 @@ class OverloadOperator
 			case EUnop(op, postFix, e1):
 				var o = defaultOp.get(op);
 				if (postFix) o = o.substr(-1) + o.substr(0, o.length - 1);
-				e1 = parseExpr(e1);
-				var t1 = typeOf(e1);
+				e1 = parseExpr(e1, ctx);
+				var t1 = typeOf(e1, ctx);
 				if (t1 == null) Context.error("can't recognize type (EUnop)", e1.pos);
 				
 				var key = o + ":" + typeName(t1);
@@ -218,7 +206,7 @@ class OverloadOperator
 				switch (op)
 				{
 					case OpAssign:
-						return { expr:EBinop(OpAssign, parseExpr(e1), parseExpr(e2)), pos:pos };
+						return { expr:EBinop(OpAssign, parseExpr(e1, ctx), parseExpr(e2, ctx)), pos:pos };
 						
 					case OpAssignOp(op2):
 						assign = true;
@@ -226,14 +214,15 @@ class OverloadOperator
 					default:
 				}
 				var o = defaultOp.get(op) + (assign ? "=" : "");
-				e1 = parseExpr(e1);
-				var t1 = typeOf(e1);
+				e1 = parseExpr(e1, ctx);
+				var t1 = typeOf(e1, ctx);
 				if (t1 == null) Context.error("can't recognize type (EBinop,1)", e1.pos);
 				
-				e2 = parseExpr(e2);
-				var t2 = typeOf(e2);
+				e2 = parseExpr(e2, ctx);
+				
+				var t2 = typeOf(e2, ctx);
 				if (t2 == null) Context.error("can't recognize type (EBinop,2)", e2.pos);
-					
+
 				var key = o + ":" + typeName(t1) + "->" + typeName(t2);
 				if (math.exists(key))
 				{
@@ -260,91 +249,95 @@ class OverloadOperator
 				return e;
 				
 			case EParenthesis(e):
-				return { expr:EParenthesis(parseExpr(e)), pos:pos };
+				return { expr:EParenthesis(parseExpr(e, ctx)), pos:pos };
 				
 			case EBlock(exprs):
 				var nexprs = new Array<Expr>();
+				var innerCtx = Lambda.array(ctx);
 				for (i in exprs)
-					nexprs.push(parseExpr(i));
+					nexprs.push(parseExpr(i, innerCtx));
 				return { expr:EBlock(nexprs), pos:pos };
 				
 			case EArray(e1, e2):
-				return { expr:EArray(parseExpr(e1), parseExpr(e2)), pos:pos };
+				return { expr:EArray(parseExpr(e1, ctx), parseExpr(e2, ctx)), pos:pos };
 				
 			case EArrayDecl(values):
 				var nvalues = new Array<Expr>();
 				for (i in values)
-					nvalues.push(parseExpr(i));
+					nvalues.push(parseExpr(i, ctx));
 				return { expr:EArrayDecl(nvalues), pos:pos };
 				
 			case EVars(vars):
 				for (i in vars)
-					i.expr = parseExpr(i.expr);
+				{
+					ctx.push(i);
+					i.expr = parseExpr(i.expr, ctx);
+				}
 				return { expr:EVars(vars), pos:pos };
 				
 			case EUntyped(e):
-				return { expr:EUntyped(parseExpr(e)), pos:pos };
+				return { expr:EUntyped(parseExpr(e, ctx)), pos:pos };
 				
 			case ECall(e, params):
 				var nparams = new Array<Expr>();
 				for (i in params)
-					nparams.push(parseExpr(i));
+					nparams.push(parseExpr(i, ctx));
 				return { expr:ECall(e, nparams), pos:pos };
 				
 			case ENew(t, params):
 				var nparams = new Array<Expr>();
 				for (i in params)
-					nparams.push(parseExpr(i));
+					nparams.push(parseExpr(i, ctx));
 				return { expr:ENew(t, nparams), pos:pos };
 				
 			case EField(e, field):
-				return { expr:EField(parseExpr(e), field), pos:pos };
+				return { expr:EField(parseExpr(e, ctx), field), pos:pos };
 				
 			case EType(e, field):
-				return { expr:EType(parseExpr(e), field), pos:pos };
+				return { expr:EType(parseExpr(e, ctx), field), pos:pos };
 				
 			case EObjectDecl(fields):
-				for (i in fields) i.expr = parseExpr(i.expr);
+				for (i in fields) i.expr = parseExpr(i.expr, ctx);
 				return { expr:EObjectDecl(fields), pos:pos };
 				
 			case EIf(econd, eif, eelse):
-				return { expr:EIf(parseExpr(econd), parseExpr(eif), parseExpr(eelse)), pos:pos };
+				return { expr:EIf(parseExpr(econd, ctx), parseExpr(eif, ctx), parseExpr(eelse, ctx)), pos:pos };
 				
 			case ETernary(econd, eif, eelse):
-				return { expr:ETernary(parseExpr(econd), parseExpr(eif), parseExpr(eelse)), pos:pos };
+				return { expr:ETernary(parseExpr(econd, ctx), parseExpr(eif, ctx), parseExpr(eelse, ctx)), pos:pos };
 				
 			case EFor(it, expr):
-				return { expr:EFor(parseExpr(it), parseExpr(expr)), pos:pos };
+				return { expr:EFor(parseExpr(it, ctx), parseExpr(expr, ctx)), pos:pos };
 				
 			case EWhile(econd, e, normalWhile):
-				return { expr:EWhile(parseExpr(econd), parseExpr(e), normalWhile), pos:pos };
+				return { expr:EWhile(parseExpr(econd, ctx), parseExpr(e, ctx), normalWhile), pos:pos };
 				
 			case EIn(e1, e2):
-				return { expr:EIn(parseExpr(e1), parseExpr(e2)), pos:pos };
+				return { expr:EIn(parseExpr(e1, ctx), parseExpr(e2, ctx)), pos:pos };
 				
 			case ESwitch(e, cases, edef):
-				if (edef != null) edef = parseExpr(edef);
+				if (edef != null) edef = parseExpr(edef, ctx);
 				for (c in cases)
 				{
-					c.expr = parseExpr(c.expr);
+					c.expr = parseExpr(c.expr, ctx);
 					var nvalues = new Array<Expr>();
-					for (i in c.values) nvalues.push(parseExpr(i));
+					for (i in c.values) nvalues.push(parseExpr(i, ctx));
 					c.values = nvalues;
 				}
-				return { expr:ESwitch(parseExpr(e), cases, edef), pos:pos };
+				return { expr:ESwitch(parseExpr(e, ctx), cases, edef), pos:pos };
 				
 			case ETry(e, catches):
-				for (c in catches) c.expr = parseExpr(c.expr);
-				return { expr:ETry(parseExpr(e), catches), pos:pos };
+				for (c in catches) c.expr = parseExpr(c.expr, ctx);
+				return { expr:ETry(parseExpr(e, ctx), catches), pos:pos };
 				
 			case EReturn(e):
-				return { expr:EReturn(e != null ? parseExpr(e) : e), pos:pos };
+				return { expr:EReturn(e != null ? parseExpr(e, ctx) : e), pos:pos };
 				
 			case EThrow(e):
-				return { expr:EThrow(parseExpr(e)), pos:pos };
+				return { expr:EThrow(parseExpr(e, ctx)), pos:pos };
 				
 			case ECast(e, t):
-				return { expr:ECast(parseExpr(e), t), pos:pos };
+				return { expr:ECast(parseExpr(e, ctx), t), pos:pos };
 				
 			default: return e;
 		}
@@ -418,11 +411,10 @@ class OverloadOperator
 				t = ret;
 				
 			case TDynamic(t2):
-				t = t2;
-				
+					t = t2;
 			default:
 		}
-		
+
 		switch (t)
 		{		
 			case TInst(t, params):
@@ -433,7 +425,6 @@ class OverloadOperator
 				
 			case TType(t, params):
 				type = t.get();
-				
 			default:
 		}
 		if (type == null)
@@ -443,9 +434,9 @@ class OverloadOperator
 		return type.pack.join(".") + (type.pack.length > 0 ? "." : "") + type.name;
 	}
 	
-	static function typeOf(e:Expr):Type
+	static function typeOf(e:Expr, ctx:IdentDef):Type
 	{
-		var t = Context.typeof(e);
+		var t = Context.typeof( { pos:e.pos, expr:EBlock([ { pos:e.pos, expr:EVars(ctx) }, e]) } );
 		return Context.follow(t);
 	}
 
@@ -488,4 +479,7 @@ class Map<K, V>
 		return Lambda.indexOf(keys, k) > -1;
 	}
 }
+
+typedef IdentDef = Array<{ name : String, type : Null<ComplexType>, expr : Null<Expr> }>; 
+
 #end
