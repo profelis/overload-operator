@@ -1,6 +1,8 @@
 ## haXe operator overloading tool
 
-Macros @op(operator, [commutative=false])
+Macros
+@op(operator, [commutative=false])
+@noOverload - ignore
 
 Support operators
 
@@ -54,31 +56,27 @@ Support operators
 ...
 ```
 
-* Register math class
-
-```
-OverloadOperator.addMath(ComplexMath);
-```
-
-* Test.hx
+* Main.hx
 
 ```
 ...
-var c = new Complex(1, -3.0);
-var c2:Complex;
-
-OverloadOperator.calc( {
-	c2 = new Complex(0, c.re);
-	c.im = 0;
-	c /= c2;  // idiv
+class Main implements IOverloadOperator<ComplexMath>
+{
+	// noOverload - ignore this method
+	@noOverload static public function main() 
+	{
+		var r = new TestRunner();
+		r.add(new OverloadTestComplex());
+		//r.run();
+		
+		new Main();
+	}
 	
-	var c3 = c + c2; // add
-	
-	assertTrue(ComplexMath.eq(c3, ComplexMath.add(c, c2)));
-	
-	assertTrue(-new Complex(3, -4) == new Complex(-3, 4));  // neg eq
-});
-
-assertTrue(ComplexMath.eq(c, c2));
-...
+	public function new()
+	{
+		var c = new Complex(0, 1);
+		c *= new Complex(0, 1);
+		trace(c);
+	}
+}
 ```

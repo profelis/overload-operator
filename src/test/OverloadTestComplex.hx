@@ -213,7 +213,6 @@ class OverloadTestComplex extends TestCase, implements IOverloadOperator<Complex
 		}
 	}
 	
-	
 	function test10()
 	{
 		var a = [new Complex(0, 1), new Complex(1, 1), new Complex(-1, 3)];
@@ -226,6 +225,13 @@ class OverloadTestComplex extends TestCase, implements IOverloadOperator<Complex
 		}
 		
 		assertTrue(s == new Complex(0, 5));
+	}
+	
+	static inline var z:Complex = new Complex(0, 1) + new Complex(1, 0);
+	
+	function test11()
+	{
+		assertTrue(z == new Complex(1, 1));
 	}
 	
 }
