@@ -77,7 +77,7 @@ class Main implements IOverloadOperator<ComplexMath>
 	public function new()
 	{
 		var c = new Complex(0, 1);
-		c *= new Complex(0, 1);
+		c *= new Complex(0, 1);  // c = ComplexMath.imult(c, new Complex(0, 1));
 		trace(c);
 	}
 }
