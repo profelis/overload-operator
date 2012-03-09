@@ -50,15 +50,16 @@ class OverloadOperator
 		{
 			switch(f.kind)
 			{
-				case FVar(t, e):
-					ctx.push({name:f.name, type:t, expr:null });
-				case FProp(get, set, t, e):
-					ctx.push( { name:f.name, type:t, expr:null } );
-				default:
+				case FVar(t, e): ctx.push( { name:f.name, type:t, expr:null } );
+					
+				case FProp(get, set, t, e): ctx.push( { name:f.name, type:t, expr:null } );
+				
 				case FFun(fn):
 					var argTypes = Lambda.array(Lambda.map(fn.args, function(arg) return arg.type));
 					if (fn.ret != null)
 						ctx.push( { name:f.name, type:TFunction(argTypes, fn.ret), expr:null } );
+				
+				default:
 			}
 		}
 
@@ -67,17 +68,9 @@ class OverloadOperator
 			var ignore = false;
 			for (m in f.meta) 
 			{
-				if (m.name == "noOverload")
-				{
-					ignore = true;
-					break;
-				}
+				if (m.name == "noOverload")	{ ignore = true; break; }
 			}
-			if (ignore)
-			{
-				nfields.push(f);
-				continue;
-			}
+			if (ignore)	{ nfields.push(f); continue; }
 
 			switch (f.kind)
 			{
@@ -85,10 +78,12 @@ class OverloadOperator
 					if (e != null)
 						f.kind = FieldType.FVar(t, parseExpr(e, ctx.copy()));
 					nfields.push(f);
+					
 				case FProp(get, set, t, e):
 					if (e != null)
 						f.kind = FProp(get, set, t, parseExpr(e, ctx.copy()));
 					nfields.push(f);
+					
 				case FFun(fn):
 					if (fn.expr != null)
 					{
@@ -101,6 +96,7 @@ class OverloadOperator
 						fn.expr = parseExpr(fn.expr, nctx);
 					}
 					nfields.push(f);
+					
 				default:
 			}
 		}
@@ -111,8 +107,7 @@ class OverloadOperator
 	{
 		for (i in cls.interfaces)
 		{
-			if (i.t.get().name == "IOverloadOperator")
-			return i.params[0];
+			if (i.t.get().name == "IOverloadOperator") return i.params[0];
 		}
 		
 		Context.error("Must implement IOverloadOperator.", Context.currentPos());
@@ -125,12 +120,13 @@ class OverloadOperator
 	static function registerMath(type:haxe.macro.Type)
 	{
 		type = Context.follow(type);
+		var tName = typeName(type);
 		if (maths == null) 
 			maths = new Array<String>();
 		else
-			if (Lambda.indexOf(maths, typeName(type)) != -1)  return;
+			if (Lambda.indexOf(maths, tName) != -1)  return;
 		
-		maths.push(typeName(type));
+		maths.push(tName);
 		
 		var pos = Context.currentPos();
 		var typeExp:Expr;
@@ -199,7 +195,7 @@ class OverloadOperator
 						if (com && ts.length == 2 && ts[0] != ts[1])
 						{
 							key = "C:" + o + ":";
-							ts.push(ts.shift());
+							ts.reverse();
 							for (t in ts) key += t + "->";
 							if (ts.length > 0) key = key.substr(0, key.length - 2);
 							//trace(key + "    " + value);
@@ -234,13 +230,9 @@ class OverloadOperator
 				if (math.exists(key))
 				{
 					var call = { expr:ECall( math.get(key), [e1]), pos:pos };
-					if (canAssign(e1))
-						return { expr:EBinop(OpAssign, e1, call ), pos:pos };
-					else
-						return call;
+					if (canAssign(e1)) return { expr:EBinop(OpAssign, e1, call ), pos:pos };
+					else return call;
 				}
-				
-				return e;
 				
 			case EBinop(op, e1, e2):
 				var assign = false;
@@ -286,16 +278,13 @@ class OverloadOperator
 					}
 				}
 				
-				return e;
-				
 			case EParenthesis(e):
 				return { expr:EParenthesis(parseExpr(e, ctx)), pos:pos };
 				
 			case EBlock(exprs):
 				var nexprs = new Array<Expr>();
-				var innerCtx = ctx.copy();
-				for (i in exprs)
-					nexprs.push(parseExpr(i, innerCtx));
+				var nctx = ctx.copy();
+				for (i in exprs) nexprs.push(parseExpr(i, nctx));
 				return { expr:EBlock(nexprs), pos:pos };
 				
 			case EArray(e1, e2):
@@ -323,11 +312,8 @@ class OverloadOperator
 				}
 				var nctx = ctx.copy();
 				for (arg in fn.args)
-				{
 					nctx.push({name:arg.name, type:arg.type, expr:arg.value});
-				}
 				fn.expr = parseExpr(fn.expr, nctx);
-				
 				return { expr:EFunction(name, fn), pos:pos };
 				
 			case EUntyped(e):
@@ -366,7 +352,7 @@ class OverloadOperator
 				var nctx = ctx;
 				switch (it.expr)
 				{
-					case EIn(e1, e2): // e1 in e2
+					case EIn(e1, e2):
 						e1 = parseExpr(e1, ctx);
 						e2 = parseExpr(e2, ctx);
 						switch (e1.expr)
@@ -374,7 +360,7 @@ class OverloadOperator
 							case EConst(c):
 								switch (c)
 								{
-									case CIdent(id), CType(id): idName = id; // e1 name 
+									case CIdent(id), CType(id): idName = id;
 									default:
 								}
 							default:
@@ -382,7 +368,7 @@ class OverloadOperator
 						
 						if (idName != null)
 						{
-							var t = typeOf(e2, ctx); // e2 Type
+							var t = typeOf(e2, ctx);
 							switch (t)
 							{
 								case haxe.macro.Type.TDynamic(t2): t = t2;
@@ -390,7 +376,7 @@ class OverloadOperator
 								case haxe.macro.Type.TFun(_, t2): t = t2;
 								default:
 							}
-							var type:haxe.macro.Type.ClassType; // e2 ClassType
+							var type:haxe.macro.Type.ClassType;
 							if (t != null)
 							{
 								switch (t)
@@ -402,9 +388,8 @@ class OverloadOperator
 								{
 									for (field in type.fields.get())
 									{
-										if (field.name == "iterator" && field.isPublic) // e2 has iterator() method
+										if (field.name == "iterator" && field.isPublic)
 										{
-											// call iterator method
 											e2 = { expr:ECall( { expr: EField(e2, "iterator"), pos:pos }, []), pos:pos };
 											break;
 										}
@@ -412,7 +397,6 @@ class OverloadOperator
 								}
 							}
 							nctx = ctx.copy();
-							// e1 expr = e2.iterator().next();
 							nctx.push( { name:idName, type:null, expr: { expr:ECall( { expr: EField(e2, "next") , pos:pos }, []), pos:pos }} );
 						}
 					default:
@@ -495,7 +479,7 @@ class OverloadOperator
 				return { expr:ETry(parseExpr(e, ctx), catches), pos:pos };
 				
 			case EReturn(e):
-				return { expr:EReturn(e != null ? parseExpr(e, ctx) : e), pos:pos };
+				if (e != null) return { expr:EReturn(parseExpr(e, ctx)), pos:pos };
 				
 			case EThrow(e):
 				return { expr:EThrow(parseExpr(e, ctx)), pos:pos };
@@ -551,10 +535,8 @@ class OverloadOperator
 					case CIdent(cid), CType(cid): return true;
 					default:
 				}
-			case EArray(e1, e2):
-				return true;
-			case EField(e, field):
-				return true;
+			case EArray(e1, e2): return true;
+			case EField(e, field): return true;
 			default:
 		}
 		return false;
@@ -566,35 +548,30 @@ class OverloadOperator
 		var type:haxe.macro.Type.BaseType;
 		switch (t)
 		{
-			case TMono(t2):
-				t = t2.get();
+			case TMono(t2): t = t2.get();
 				if (t == null) return "null";
 				
-			case TFun(_, ret):
-				t = ret;
+			case TFun(_, ret): t = ret;
 				
-			case TDynamic(t2):
-					t = t2;
+			case TDynamic(t2): t = t2;
+			
 			default:
 		}
 		if (t != null)
 			switch (t)
 			{		
-				case TInst(t, _):
-					type = t.get();
+				case TInst(t, _): type = t.get();
 				
-				case TEnum(t, _):
-					type = t.get();
+				case TEnum(t, _): type = t.get();
 					
-				case TType(t, _):
-					type = t.get();
+				case TType(t, _): type = t.get();
+				
 				default:
 			}
 		if (type == null)
-		{
 			Context.error("unknown type name '" + t + "'", Context.currentPos());
-		}
-		return type.pack.join(".") + (type.pack.length > 0 ? "." : "") + type.name;
+			
+		return  (type.pack.length > 0 ? type.pack.join(".") + "." : "") + type.name;
 	}
 	
 	static function typeOf(e:Expr, ctx:IdentDef):haxe.macro.Type
