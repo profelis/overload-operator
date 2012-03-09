@@ -41,7 +41,6 @@ class OverloadTestComplex extends TestCase, implements IOverloadOperator<Complex
 		super();
 	}
 	
-	
 	function test1()
 	{
 		var c1 = new Complex(2, 3);
@@ -232,6 +231,25 @@ class OverloadTestComplex extends TestCase, implements IOverloadOperator<Complex
 	function test11()
 	{
 		assertTrue(z == new Complex(1, 1));
+	}
+	
+	@noOverload function physEq(a:Dynamic, b:Dynamic):Bool
+	{
+		return a == b;
+	}
+	
+	function test12()
+	{
+		var c = new Complex(1, 2);
+		var c2 = new Complex();
+		c2 <<= c;
+		var c3 = c;
+		
+		assertTrue(c == c3);
+		assertTrue(physEq(c3, c));
+		
+		assertTrue(c == c2);
+		assertFalse(physEq(c2, c));
 	}
 	
 }

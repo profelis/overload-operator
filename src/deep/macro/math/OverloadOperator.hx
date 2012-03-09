@@ -267,7 +267,6 @@ class OverloadOperator
 				var key = o + ":" + typeName(t1) + "->" + typeName(t2);
 				if (math.exists(key))
 				{
-					
 					var call = { expr:ECall( math.get(key), [e1, e2]), pos:pos };
 					if (assign && canAssign(e1))
 						return { expr:EBinop(OpAssign, e1, call), pos:pos };
@@ -528,9 +527,9 @@ class OverloadOperator
 		defaultOp.set(OpOr, "|");
 		defaultOp.set(OpBoolOr, "||");
 		defaultOp.set(OpXor, "^");
-		defaultOp.set(OpShl, ">>");
-		defaultOp.set(OpShr, "<<");
-		defaultOp.set(OpUShr, "<<<");
+		defaultOp.set(OpShl, "<<");
+		defaultOp.set(OpShr, ">>");
+		defaultOp.set(OpUShr, ">>>");
 		defaultOp.set(OpMod, "%");
 		defaultOp.set(OpInterval, "...");
 		

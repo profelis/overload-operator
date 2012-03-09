@@ -135,6 +135,13 @@ class ComplexMath
 		return a.re != b || a.im != 0;
 	}
 	
+	@op("<<=") public static function clone(a:Complex, b:Complex):Complex
+	{
+		a.re = b.re;
+		a.im = b.im;
+		return a;
+	}
+	
 	inline static public function sqr(c:Complex):Complex
 	{
 		var tim = 2 * c.re * c.im;

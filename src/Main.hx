@@ -18,13 +18,13 @@ class Main implements IOverloadOperator<ComplexMath>
 		r.add(new OverloadTestComplex());
 		r.run();
 		
-		new Main();
+		//new Main();
 	}
 	
 	public function new()
 	{
 		var c = new Complex(0, 1);
-		c *= new Complex(0, 1);
+		//c *= new Complex(0, 1);
 		//trace(c);
 	}
 }
