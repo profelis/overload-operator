@@ -32,7 +32,7 @@ class Fractal implements IOverloadOperator<ComplexMath>
 		
 		
 		var bd = new BitmapData(800, 800, false, 0xFFFFFF);
-		fractal(40, new Complex(-0.008, 0.697), bd, true);
+		fractal(45, new Complex(-0.008, 0.697), bd, true);
 		
 		s.addChild(new Bitmap(bd));
 	}
@@ -52,21 +52,23 @@ class Fractal implements IOverloadOperator<ComplexMath>
 		var i:Int;
 		var j = -h;
 		var k:Int;
-		var step = 40;
+		var step = 5;
 		
 		var ts = Timer.stamp();
 		
-		function tick():Void {
+		function tick():Void
+		{
 			res.lock();
 			for (t in 0...step)
 			{
 				i = -w;
-				while (i <= w) {
+				while (i <= w)
+				{
 					z.re = i / w;
 					z.im = j / h;
 					k = 0;
-					while (k < randomSeed) {
-						
+					while (k < randomSeed)
+					{
 						z.sqr();
 						z += c;
 						
@@ -98,7 +100,6 @@ class Fractal implements IOverloadOperator<ComplexMath>
 		}
 		else
 		{
-			var it = 0;
 			timer = new Timer(30);
 			timer.run = tick;
 		}
