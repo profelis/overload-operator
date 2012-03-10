@@ -67,10 +67,6 @@ class Main implements IOverloadOperator<ComplexMath>
 	// noOverload - ignore this method
 	@noOverload static public function main() 
 	{
-		var r = new TestRunner();
-		r.add(new OverloadTestComplex());
-		//r.run();
-		
 		new Main();
 	}
 	
