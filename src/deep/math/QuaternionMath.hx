@@ -80,19 +80,19 @@ class QuaternionMath
 	
 	// scalar
 	
-	@op("*", true) inline static public function scalar(quat:Quaternion, scalar:Float)
+	@op("*", false) inline static public function scalar(quat:Quaternion, scalar:Float)
 	{
 		return new Quaternion(quat.x * scalar, quat.y * scalar, quat.z * scalar, quat.w * scalar);
 	}
 	
-	@op("/", true) inline static public function scalarDiv(quat:Quaternion, scalar:Float)
+	@op("/", false) inline static public function scalarDiv(quat:Quaternion, scalar:Float)
 	{
 		return new Quaternion(quat.x / scalar, quat.y / scalar, quat.z / scalar, quat.w / scalar);
 	}	
 	
 	// scalar assignment versions
 	
-	@op("*=", true) inline static public function scalarAssign(quat:Quaternion, scalar:Float)
+	@op("*=", false) inline static public function scalarAssign(quat:Quaternion, scalar:Float)
 	{
 		quat.x *= scalar;
 		quat.y *= scalar;
@@ -101,7 +101,7 @@ class QuaternionMath
 		return quat;
 	}
 	
-	@op("/=", true) inline static public function scalarDivAssign(quat:Quaternion, scalar:Float)
+	@op("/=", false) inline static public function scalarDivAssign(quat:Quaternion, scalar:Float)
 	{
 		quat.x /= scalar;
 		quat.y /= scalar;
