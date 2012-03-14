@@ -187,7 +187,6 @@ class OverloadOperator
 						if (ts.length > 0) key = key.substr(0, key.length - 2);
 						
 						var value = { expr:EField(typeExp, method.name), pos:pos };
-						//trace(key + "    " + value);
 						if (math.exists(key)) 
 							Context.warning("Overriding existing method " + key, pos);
 						math.set(key, value);
@@ -198,7 +197,6 @@ class OverloadOperator
 							ts.reverse();
 							for (t in ts) key += t + "->";
 							if (ts.length > 0) key = key.substr(0, key.length - 2);
-							//trace(key + "    " + value);
 							if (math.exists(key))
 								Context.warning("Overriding existing method " + key, pos);
 							math.set(key, value);
@@ -253,7 +251,6 @@ class OverloadOperator
 				
 				e2 = parseExpr(e2, ctx);
 				var t2 = typeOf(e2, ctx);
-				//trace(o + "  " + t1 + " " + t2);
 				if (t2 == null) Context.error("can't recognize type (EBinop,2)", e2.pos);
 
 				var key = o + ":" + typeName(t1) + "->" + typeName(t2);
