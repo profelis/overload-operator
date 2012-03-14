@@ -191,7 +191,7 @@ class OverloadOperator
 						if (math.exists(key)) 
 							Context.warning("Overriding existing method " + key, pos);
 						math.set(key, value);
-						
+
 						if (com && ts.length == 2 && ts[0] != ts[1])
 						{
 							key = "C:" + o + ":";
@@ -519,9 +519,9 @@ class OverloadOperator
 		
 		defaultOp.set(OpIncrement, "++x"); // "x++" postfix
 		defaultOp.set(OpDecrement, "--x"); // "x--" postfix
-		defaultOp.set(OpNot, "!");
+		defaultOp.set(OpNot, "!x");
 		defaultOp.set(OpNeg, "-x");
-		defaultOp.set(OpNegBits, "~");
+		defaultOp.set(OpNegBits, "~x");
 		defaultOp;
 	}
 	
