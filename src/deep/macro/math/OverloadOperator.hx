@@ -230,7 +230,7 @@ class OverloadOperator
 				if (math.exists(key))
 				{
 					var call = { expr:ECall( math.get(key), [e1]), pos:pos };
-					if (canAssign(e1)) return { expr:EBinop(OpAssign, e1, call ), pos:pos };
+					if (needAssign(o) && canAssign(e1)) return { expr:EBinop(OpAssign, e1, call ), pos:pos };
 					else return call;
 				}
 				
@@ -523,6 +523,11 @@ class OverloadOperator
 		defaultOp.set(OpNeg, "-x");
 		defaultOp.set(OpNegBits, "~");
 		defaultOp;
+	}
+	
+	static function needAssign(op:String):Bool
+	{
+		return op == "++x" || op == "--x" || op == "x++" || op == "x--";
 	}
 	
 	static function canAssign(e:Expr):Bool
