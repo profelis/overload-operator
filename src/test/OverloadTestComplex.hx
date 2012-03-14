@@ -252,4 +252,13 @@ class OverloadTestComplex extends TestCase, implements IOverloadOperator<Complex
 		assertFalse(physEq(c2, c));
 	}
 	
+	function test13()
+	{
+		var c = new Complex(1, 1);
+		var c2 = -c;
+		assertEquals(1.0, c.re);
+		assertEquals(1.0, c.im);
+		assertEquals(-1.0, c2.re);
+		assertEquals(-1.0, c2.im);
+	}
 }
