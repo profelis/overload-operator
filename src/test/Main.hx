@@ -12,6 +12,7 @@ class Main
 	{
 		var r = new TestRunner();
 		r.add(new OverloadTestComplex());
+		r.add(new OverloadTestQuaternion());
 		r.run();
 	}
 }
