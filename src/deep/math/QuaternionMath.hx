@@ -80,7 +80,7 @@ class QuaternionMath
 	
 	// scalar
 	
-	@op("*", false) inline static public function scalar(quat:Quaternion, scalar:Float)
+	@op("*", true) inline static public function scalar(quat:Quaternion, scalar:Float)
 	{
 		return new Quaternion(quat.x * scalar, quat.y * scalar, quat.z * scalar, quat.w * scalar);
 	}
