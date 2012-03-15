@@ -147,4 +147,11 @@ class Int32Math
 	{
 		return Int32.compare(a, Int32.ofInt(b)) != 0;
 	}
+	
+	inline static public function abs(a:Int32):Int32
+	{
+		if (Int32.isNeg(a))
+			return Int32.neg(a);
+		return a;
+	}
 }
