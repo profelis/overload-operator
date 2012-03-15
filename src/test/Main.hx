@@ -13,6 +13,7 @@ class Main
 		var r = new TestRunner();
 		r.add(new OverloadTestComplex());
 		r.add(new OverloadTestQuaternion());
+		r.add(new OverloadTestInt32());
 		r.run();
 	}
 }
