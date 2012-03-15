@@ -18,7 +18,7 @@ class Int32Math
 	
 	@op("-", true) inline static public var sub = Int32.sub;
 	
-	@op("-", true) inline static public function subInt(a:Int32, b:Int):Int32
+	@op("-", false) inline static public function subInt(a:Int32, b:Int):Int32
 	{
 		return Int32.sub(a, Int32.ofInt(b));
 	}
@@ -32,14 +32,14 @@ class Int32Math
 	
 	@op("/", true) inline static public var div = Int32.div;
 	
-	@op("/", true) inline static public function divInt(a:Int32, b:Int):Int32
+	@op("/", false) inline static public function divInt(a:Int32, b:Int):Int32
 	{
 		return Int32.div(a, Int32.ofInt(b));
 	}
 	
 	@op("%", true) inline static public var mod = Int32.mod;
 	
-	@op("%", true) inline static public function modInt(a:Int32, b:Int):Int32
+	@op("%", false) inline static public function modInt(a:Int32, b:Int):Int32
 	{
 		return Int32.mod(a, Int32.ofInt(b));
 	}

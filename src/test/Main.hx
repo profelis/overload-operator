@@ -14,6 +14,7 @@ class Main
 		r.add(new OverloadTestComplex());
 		r.add(new OverloadTestQuaternion());
 		r.add(new OverloadTestInt32());
+		r.add(new OverloadTestInt64());
 		r.run();
 	}
 }
