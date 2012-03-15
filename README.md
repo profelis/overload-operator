@@ -78,3 +78,11 @@ class Main implements IOverloadOperator<ComplexMath>
 	}
 }
 ```
+
+## Supported maths
+
+* [ComplexMath](https://github.com/profelis/overload-operator/blob/master/src/deep/math/ComplexMath.hx)
+* [QuaternionMath](https://github.com/profelis/overload-operator/blob/master/src/deep/math/QuaternionMath.hx)
+* [Int32Math](https://github.com/profelis/overload-operator/blob/master/src/deep/math/Int32Math.hx)
+* [Int64Math](https://github.com/profelis/overload-operator/blob/master/src/deep/math/Int64Math.hx)
+* Beta [PointMath](https://github.com/profelis/overload-operator/blob/master/src/deep/math/PointMath.hx)
