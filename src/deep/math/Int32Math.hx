@@ -72,6 +72,13 @@ class Int32Math
 		return Int32.div(a, Int32.ofInt(b));
 	}
 	
+	@op("%=", true) inline static public var imod = Int32.mod;
+	
+	@op("%=", false) inline static public function imodInt(a:Int32, b:Int):Int32
+	{
+		return Int32.mod(a, Int32.ofInt(b));
+	}
+	
 	@op("<<", true) inline static public var shl = Int32.shl;
 	@op("<<=", true) inline static public var ishl = Int32.shl;
 	@op(">>", true) inline static public var shr = Int32.shr;

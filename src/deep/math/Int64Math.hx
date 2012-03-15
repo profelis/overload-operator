@@ -118,6 +118,18 @@ class Int64Math
 		return Int64.div(a, Int64.ofInt(b));
 	}
 	
+	@op("%=", true) inline static public var imod = Int64.mod;
+	
+	@op("%=", false) inline static public function imodInt32(a:Int64, b:Int32):Int64
+	{
+		return Int64.mod(a, Int64.ofInt32(b));
+	}
+	
+	@op("%=", false) inline static public function imodInt(a:Int64, b:Int):Int64
+	{
+		return Int64.mod(a, Int64.ofInt(b));
+	}
+	
 	@op("<<", true) inline static public var shl = Int64.shl;
 	@op("<<=", true) inline static public var ishl = Int64.shl;
 	@op(">>", true) inline static public var shr = Int64.shr;
