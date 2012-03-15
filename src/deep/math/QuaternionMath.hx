@@ -66,10 +66,15 @@ class QuaternionMath
 
 	// conjugation
 	
-	@op('-x') inline static public function conjugate(rhs:Quaternion)
+	@op('-x') inline static public function invert(rhs:Quaternion)
+	{
+		return new Quaternion( -rhs.x, -rhs.y, -rhs.z, -rhs.w);
+	}
+	
+	@op('~x') inline static public function conjugate(rhs:Quaternion)
 	{
 		return new Quaternion( -rhs.x, -rhs.y, -rhs.z, rhs.w);
-	}
+	}	
 		
 	// rotation
 	
@@ -121,4 +126,20 @@ class QuaternionMath
 	{
 		return lhs.x != rhs.x || lhs.y != rhs.y || lhs.z != rhs.z || lhs.w != rhs.w;
 	}	
+	
+	static public inline function dot(q1:Quaternion, q2:Quaternion)
+	{
+		return q1.x * q2.x + q1.y * q2.y + q1.z * q2.z ;
+	}
+	
+	static public inline function slerp(q1:Quaternion, q2:Quaternion, t:Float)
+	{
+		var angle = dot(q1, q2);
+		if (angle == 0)
+			return q1.copy();
+		var f1 = Math.sin((1 - t) * angle) / Math.sin(angle);
+		var f2 = Math.sin(t * angle) / Math.sin(angle);
+		
+		return add(scalar(q1, f1), scalar(q2, f2));
+	}
 }

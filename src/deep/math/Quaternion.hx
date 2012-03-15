@@ -37,6 +37,11 @@ class Quaternion
 		return QuaternionMath.scalar(QuaternionMath.conjugate(this), getNorm());
 	}
 	
+	public function copy()
+	{
+		return new Quaternion(x, y, z, w);
+	}
+	
 	static public function fromAxisAngle(x:Float, y:Float, z:Float, a:Float)
 	{
 		var r = Math.sin(a / 2.0);
