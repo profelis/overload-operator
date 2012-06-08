@@ -1,4 +1,6 @@
-## haXe operator overloading tool
+Looks Simn fork first - https://github.com/Simn/hxop
+
+## haXe operator overloading tool (alpha)
 
 Macros
 
